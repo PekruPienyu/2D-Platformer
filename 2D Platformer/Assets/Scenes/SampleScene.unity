@@ -391,53 +391,38 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0
       value: 1
-      inSlope: -0.012900391
-      outSlope: -0.012900391
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.2396681
+      outWeight: 0
     - serializedVersion: 3
-      time: 0.476301
-      value: 1
-      inSlope: 0.13861723
-      outSlope: 0.13861723
+      time: 0.523577
+      value: 0.86745465
+      inSlope: -1.4962093
+      outSlope: -1.4962093
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.14615358
+      inWeight: 0.33333334
       outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.49953604
-      value: 0.2978907
-      inSlope: -3.9514751
-      outSlope: -3.9514751
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.21630068
-    - serializedVersion: 3
-      time: 0.6121216
+      time: 1
       value: 0
-      inSlope: -0.03467835
-      outSlope: -0.03467835
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.2608639
-    - serializedVersion: 3
-      time: 1.0014648
-      value: 0
-      inSlope: -0.08641577
-      outSlope: -0.08641577
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.13594937
+      inWeight: 0
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  moveSpeed: 300
-  jumpForce: 1.9
+  moveSpeed: 5
+  jumpSpeed: 1.25
+  fallAcceleration: 0.35
+  maxFallSpeed: 3.5
+  jumpDuration: 0.5
 --- !u!95 &1392970764
 Animator:
   serializedVersion: 5
@@ -499,10 +484,10 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
-  m_AngularDrag: 0.05
-  m_GravityScale: 30
+  m_AngularDrag: 0
+  m_GravityScale: 0
   m_Material: {fileID: 0}
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
