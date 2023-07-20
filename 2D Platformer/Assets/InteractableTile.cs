@@ -32,7 +32,53 @@ public class InteractableTile : MonoBehaviour
         spriteRenderer.sprite = tileSprites[mySpriteIndex];
     }
 
+    public void HandleInteraction(int currentPlayerPower)
+    {
+        if (mySpriteIndex == 2) return;
+        if (itemCount == 0 && currentPlayerPower > 1)
+        {
+            DestroySelf();
+        }
+        else if (itemCount == 0 && currentPlayerPower == 1)
+        {
+            Bounce();
+            mySpriteIndex = 2;
+            spriteRenderer.sprite = tileSprites[mySpriteIndex];
+        }
+    }
 
+    private void DestroySelf()
+    {
+        Debug.Log("Destroy");
+    }
+
+    private void Bounce()
+    {
+        StartCoroutine(StartBounce());
+    }
+
+    private IEnumerator StartBounce()
+    {
+        Vector3 startPos = transform.position;
+        float timer = 0f;
+        float duration = 0.1f;
+        while(timer < duration)
+        {
+            timer += Time.deltaTime;
+            transform.position = new Vector3(transform.position.x, transform.position.y + 0.07f, transform.position.z);
+            yield return null;
+        }
+        timer = 0;
+
+        while(timer < duration)
+        {
+            timer += Time.deltaTime;
+            transform.position = new Vector3(transform.position.x, transform.position.y - 0.07f, transform.position.z);
+            yield return null;
+        }
+        transform.position = startPos;
+        yield return null;
+    }
 
     #region  // CustomEditor Hide unused variables in Inspector //
     [CustomEditor(typeof(InteractableTile)), CanEditMultipleObjects]

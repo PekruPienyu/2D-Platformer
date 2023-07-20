@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 8532263377041380066}
   - component: {fileID: 8532263377041380067}
   - component: {fileID: 8532263377041380064}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: InteractableTilePrefab
-  m_TagString: Untagged
+  m_TagString: Tile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
