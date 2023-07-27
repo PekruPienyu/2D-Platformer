@@ -65,7 +65,7 @@ public class InteractableTile : MonoBehaviour
         while(timer < duration)
         {
             timer += Time.deltaTime;
-            transform.position = new Vector3(transform.position.x, transform.position.y + 0.07f, transform.position.z);
+            transform.position = new Vector3(transform.position.x, transform.position.y + (2f * Time.deltaTime), transform.position.z);
             yield return null;
         }
         timer = 0;
@@ -73,7 +73,7 @@ public class InteractableTile : MonoBehaviour
         while(timer < duration)
         {
             timer += Time.deltaTime;
-            transform.position = new Vector3(transform.position.x, transform.position.y - 0.07f, transform.position.z);
+            transform.position = new Vector3(transform.position.x, transform.position.y - (2f * Time.deltaTime), transform.position.z);
             yield return null;
         }
         transform.position = startPos;
