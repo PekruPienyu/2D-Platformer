@@ -138,6 +138,8 @@ public class Player_Controller : MonoBehaviour
     [SerializeField] private float fallAcceleration = 1f;
     [SerializeField] private float maxFallSpeed = 5f;
 
+
+
     private void FixedUpdate()
     {
         if (pauseGame) return;
