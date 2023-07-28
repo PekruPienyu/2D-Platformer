@@ -2089,70 +2089,67 @@ MonoBehaviour:
   playerControllerKeys: {fileID: 11400000, guid: 2757dc4847f57694bb921d7de004cdf1, type: 2}
   pauseGame: 0
   moveSpeed: 5
-  maxMoveAcceleration: 1
-  addToMoveAcceleration: 0.05
+  maxMoveSpeed: 1
+  moveAccelerationValue: 0.05
   moveDecelerationStrength: 1
-  maxSprintAcceleration: 0.5
-  addToSprintAcceleration: 0.05
+  maxSprintSpeed: 0.5
+  sprintAccelerationValue: 0.05
   sprintDecelerationStrength: 1
-  jumpBufferActive: 0
-  doubleJumpActive: 0
+  jumpBufferEnable: 1
+  doubleJumpEnable: 1
+  jumpBufferDuration: 0.5
   jumpForceCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
+      inSlope: -0.0033838206
+      outSlope: -0.0033838206
+      tangentMode: 34
       weightedMode: 0
       inWeight: 0
-      outWeight: 0
+      outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.49223542
-      value: 0.7976457
-      inSlope: -1.3588231
-      outSlope: -1.3588231
+      time: 0.50053644
+      value: 0.9983063
+      inSlope: 0.004471091
+      outSlope: 0.004471091
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.109535575
+      inWeight: 0.16402748
+      outWeight: 0.33333334
     - serializedVersion: 3
       time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
+      value: 0.3
+      inSlope: -1.3981125
+      outSlope: -1.3981125
+      tangentMode: 34
       weightedMode: 0
-      inWeight: 0
+      inWeight: 0.33333334
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  minJumpMultiplier: 0.4
-  maxJumpMultiplier: 1.5
-  addToJumpMultiplier: 0.12
-  jumpBufferDuration: 0.5
-  jumpSpeed: 1.6
-  jumpDuration: 0.55
-  airTimeActive: 1
+  jumpForce: 1.5
+  maxJumpHeight: 23
+  minJumpHeight: 8
+  airTimeEnable: 1
   airTimeDuration: 0.05
   airTimeMoveSpeedAdd: 5
-  airTimeMoveSpeedMultiplier: 1
   fallAcceleration: 0.1
   maxFallSpeed: 2.5
-  edgeCorrectionActive: 1
+  edgeCorrectionEnable: 1
   groundCheckSize: {x: 0.35, y: 0.1}
   headCheckSize: {x: 0.19, y: 0.1}
   bodyCheckSize: {x: 0.4, y: 0.25}
   topEdgeCheckAreaSlider: 0.175
-  topEdgeCorrectionValue: 0.2
+  topEdgeCorrectionValue: 0.42
   bottomEdgeCheckAreaSlider: 0.1
   bottomEdgeCorrectionValue: 0.7
   bottomRayYPosition: 0.45
   coyoteTimeActive: 1
-  coyoteDuration: 0.2
+  coyoteDuration: 0.01
 --- !u!95 &1392970764
 Animator:
   serializedVersion: 5

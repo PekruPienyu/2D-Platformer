@@ -14,25 +14,23 @@ public class Player_Controller : MonoBehaviour
     [SerializeField] private float moveSpeed;
     private Vector2 moveDir;
     private float moveAcceleration;
-    [SerializeField] private float maxMoveAcceleration;
-    [SerializeField] private float addToMoveAcceleration;
+    [SerializeField] private float maxMoveSpeed;
+    [SerializeField] private float moveAccelerationValue;
     [SerializeField] private float moveDecelerationStrength;
 
     [Header("Sprint")]
-    private float sprintAcceleration;
-    [SerializeField] private float maxSprintAcceleration;
-    [SerializeField] private float addToSprintAcceleration;
+    [SerializeField] private float maxSprintSpeed;
+    [SerializeField] private float sprintAccelerationValue;
     [SerializeField] private float sprintDecelerationStrength;
+    private float sprintAcceleration;
 
     [Header("Jump")]
-    [SerializeField] private bool jumpBufferActive = true;
-    [SerializeField] private bool doubleJumpActive = true;
-    [SerializeField] private AnimationCurve jumpForceCurve;
-    [SerializeField] private float minJumpMultiplier;
-    [SerializeField] private float maxJumpMultiplier;
-    [SerializeField] private float addToJumpMultiplier;
+    [SerializeField] private bool jumpBufferEnable = true;
+    [SerializeField] private bool doubleJumpEnable = true;
     [SerializeField] private float jumpBufferDuration;
-    private float jumpMultiplier;
+    [Space]
+    [SerializeField] private AnimationCurve jumpForceCurve;
+    [SerializeField] private float jumpForce;
 
     private bool jumpBuffer = false;
     private bool canDoubleJump = true;
@@ -53,12 +51,11 @@ public class Player_Controller : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        Application.targetFrameRate = 30;
     }
 
     private void Start()
     {
-        jumpMultiplier = minJumpMultiplier;
+        currentJumpHeight = minJumpHeight;
         pauseGame = false;
         playerControllerKeys.left = KeyCode.A;
         playerControllerKeys.right = KeyCode.D;
@@ -90,11 +87,11 @@ public class Player_Controller : MonoBehaviour
         }
         else if (Input.GetKey(playerControllerKeys.jump) && currentPlayerState == PlayerState.Jump)
         {
-            jumpMultiplier += (addToJumpMultiplier * Time.deltaTime * 20);
-
-            if (jumpMultiplier > maxJumpMultiplier)
+            jumpHeightToAdd = jumpForce * 1.5f;
+            currentJumpHeight += jumpHeightToAdd * Time.deltaTime * 40;
+            if(currentJumpHeight >= maxJumpHeight)
             {
-                jumpMultiplier = maxJumpMultiplier;
+                currentJumpHeight = maxJumpHeight;
             }
         }
         // Left Right
@@ -113,34 +110,27 @@ public class Player_Controller : MonoBehaviour
             moveSpeedDecelerateRoutine = StartCoroutine(DecelerateMoveSpeed());
             player.ChangeAnimationToIdle();
         }
-        //Checks Timers
+        //Checks & Timers
         CheckCoyoteTime();
         JumpBufferTimer();
         GroundCheckBoxCast();
         HeadCheckBoxCast();
         BodyCheckBoxCast();
 
-        if (onAir)
-        {
-            airTimeTimer += Time.deltaTime;
-            if (moveDir.x != 0)
-            {
-                moveDir.x = moveAcceleration * airTimeMoveSpeedMultiplier;
-            }
-        }
-        else moveDir.x = (moveAcceleration + sprintAcceleration);
+        moveDir.x = (moveAcceleration + sprintAcceleration);
     }
 
-
-    private float jumpTimer = 0f;
-    [SerializeField] private float jumpSpeed = 5f;
-    [SerializeField] private float jumpDuration = 0.5f;
+    [Space]
+    [SerializeField] private float maxJumpHeight;
+    [SerializeField] private float minJumpHeight;
+    private float jumpHeightToAdd;
+    private float currentJumpHeight;
+    private float coveredJumpHeight;
 
     [Header("Air Time")]
-    [SerializeField] private bool airTimeActive;
+    [SerializeField] private bool airTimeEnable;
     [SerializeField] private float airTimeDuration;
     [SerializeField] private float airTimeMoveSpeedAdd;
-    [SerializeField] private float airTimeMoveSpeedMultiplier;
     private float airTimeTimer;
     private bool onAir;
 
@@ -156,16 +146,23 @@ public class Player_Controller : MonoBehaviour
             case PlayerState.Jump:
                 player.ChangeAnimationToJump();
 
-                jumpTimer += Time.deltaTime;
-                float normalizedTime = jumpTimer / jumpDuration;
-                float strength = jumpForceCurve.Evaluate(normalizedTime);
+                float coveredHeightNormalized = (coveredJumpHeight - minJumpHeight) / (currentJumpHeight - minJumpHeight);
+                float strength = jumpForceCurve.Evaluate(coveredHeightNormalized);
 
-                moveDir.y = (jumpSpeed * jumpMultiplier) * strength;
-                if (jumpTimer > jumpDuration)
+                if (coveredJumpHeight < minJumpHeight)
                 {
-                    jumpTimer = 0;
+                    moveDir.y = jumpForce * Time.deltaTime * 40;
+                    coveredJumpHeight += moveDir.y;
+                }
+                else
+                {
+                    moveDir.y = jumpForce * strength * Time.deltaTime * 40;
+                    coveredJumpHeight += moveDir.y;
+                }
+                if(coveredJumpHeight >=  currentJumpHeight)
+                {
                     moveDir.y = 0;
-                    if (airTimeActive)
+                    if (airTimeEnable)
                     {
                         onAir = true;
                         currentPlayerState = PlayerState.OnAir;
@@ -174,8 +171,8 @@ public class Player_Controller : MonoBehaviour
                 }
                 break;
             case PlayerState.OnAir:
-                
-                if(airTimeTimer >= airTimeDuration)
+                airTimeTimer += Time.deltaTime;
+                if (airTimeTimer >= airTimeDuration)
                 {
                     onAir = false;
                     airTimeTimer = 0;
@@ -183,28 +180,21 @@ public class Player_Controller : MonoBehaviour
                 }
                 break;
             case PlayerState.Fall:
-                moveDir.y -= fallAcceleration;
-                if(moveDir.y < -maxFallSpeed)
-                {
-                    moveDir.y = -maxFallSpeed;
-                }
+
+                ApplyGravity();
                 if(isGrounded)
                 {
                     player.ChangeAnimationToIdle();
-                    isCoyoteTime = true;
-                    if (doubleJumpActive) canDoubleJump = true;
-                    else canDoubleJump = false;
-                    jumpMultiplier = minJumpMultiplier;
+                    ConfigureDoubleJumpVariables();
+                    ResetCoyoteTimer();
                     if (jumpBuffer)
                     {
                         moveDir.y = 0;
-                        jumpTimer = 0;
-                        currentPlayerState = PlayerState.Jump;
-                        jumpBuffer = false;
+                        Jump();
                     }
                     else currentPlayerState = PlayerState.Grounded;
                 }
-                    break;
+                break;
             case PlayerState.Grounded:
                 moveDir.y = 0;
                 if (!isGrounded)
@@ -243,17 +233,63 @@ public class Player_Controller : MonoBehaviour
         {
             moveAcceleration += (airTimeMoveSpeedAdd * direction) * Time.deltaTime;
         }
-        prevKeyPressed = keyPressed;
         MoveAcceleration(direction);
+        prevKeyPressed = keyPressed;
         if (isGrounded) player.ChangeAnimationToRun();
     }
 
     #endregion
 
+    #region Gravity----------------
+    private void ApplyGravity()
+    {
+        moveDir.y -= fallAcceleration;
+        if (moveDir.y < -maxFallSpeed)
+        {
+            moveDir.y = -maxFallSpeed;
+        }
+    }
+    #endregion
+
     #region Jump Check And Functions----------------
+    private void Jump()
+    {
+        jumpBuffer = false;
+        currentJumpHeight = minJumpHeight;
+        coveredJumpHeight = 0;
+        currentPlayerState = PlayerState.Jump;
+    }
+
+    private bool CanJump()
+    {
+        if(isGrounded)
+        {
+            return true;
+        }
+        else
+        {
+            if(isCoyoteTime)
+            {
+                return true;
+            }
+            else if(canDoubleJump)
+            {
+                canDoubleJump = false;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void ConfigureDoubleJumpVariables()
+    {
+        if (doubleJumpEnable) canDoubleJump = true;
+        else canDoubleJump = false;
+    }
+
     private void CheckJumpBuffer()
     {
-        if (!jumpBufferActive)
+        if (!jumpBufferEnable)
         {
             jumpBuffer = false;
             return;
@@ -282,27 +318,7 @@ public class Player_Controller : MonoBehaviour
         }
     }
 
-    private bool CanJump()
-    {
-        if(isGrounded)
-        {
-            return true;
-        }
-        else
-        {
-            if(isCoyoteTime || (currentPlayerState == PlayerState.Jump && canDoubleJump))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 
-    private void Jump()
-    {
-        jumpTimer = 0;
-        currentPlayerState = PlayerState.Jump;
-    }
     #endregion
 
     #region Player Key Change Functions--------------
@@ -330,10 +346,10 @@ public class Player_Controller : MonoBehaviour
     #region Accelerate, Decelerate------------
     private void MoveAcceleration(float dir)
     {
-        moveAcceleration += (addToMoveAcceleration * dir);
-        if(Mathf.Abs(moveAcceleration) >= maxMoveAcceleration)
+        moveAcceleration += (moveAccelerationValue * dir) * Time.deltaTime * 40;
+        if(Mathf.Abs(moveAcceleration) >= maxMoveSpeed)
         {
-            moveAcceleration = (maxMoveAcceleration * dir);
+            moveAcceleration = (maxMoveSpeed * dir);
         }
     }
 
@@ -349,24 +365,24 @@ public class Player_Controller : MonoBehaviour
         {
             dir = -1;
         }
-        sprintAcceleration += (addToSprintAcceleration * dir);
-        if (Mathf.Abs(sprintAcceleration) > maxSprintAcceleration)
+        sprintAcceleration += (sprintAccelerationValue * dir) * Time.deltaTime * 40;
+        if (Mathf.Abs(sprintAcceleration) > maxSprintSpeed)
         {
-            sprintAcceleration = (maxSprintAcceleration * dir);
+            sprintAcceleration = (maxSprintSpeed * dir);
         }
     }
 
     private IEnumerator DecelerateMoveSpeed()
     {
-        while(Mathf.Abs(moveAcceleration) > addToMoveAcceleration)
+        while(Mathf.Abs(moveAcceleration) > moveAccelerationValue)
         {
             if(moveAcceleration > 0)
             {
-                moveAcceleration -= (addToMoveAcceleration * moveDecelerationStrength);
+                moveAcceleration -= (moveAccelerationValue * moveDecelerationStrength) * Time.deltaTime * 40;
             }
             else
             {
-                moveAcceleration += (addToMoveAcceleration * moveDecelerationStrength);
+                moveAcceleration += (moveAccelerationValue * moveDecelerationStrength) * Time.deltaTime * 40;
             }
             yield return null;
         }
@@ -376,15 +392,15 @@ public class Player_Controller : MonoBehaviour
 
     private IEnumerator DecelerateSprintSpeed()
     {
-        while (Mathf.Abs(sprintAcceleration) > addToSprintAcceleration)
+        while (Mathf.Abs(sprintAcceleration) > sprintAccelerationValue)
         {
             if (sprintAcceleration > 0)
             {
-                sprintAcceleration -= (addToSprintAcceleration * sprintDecelerationStrength);
+                sprintAcceleration -= (sprintAccelerationValue * sprintDecelerationStrength) * Time.deltaTime * 40;
             }
             else
             {
-                sprintAcceleration += (addToSprintAcceleration * sprintDecelerationStrength);
+                sprintAcceleration += (sprintAccelerationValue * sprintDecelerationStrength) * Time.deltaTime * 40;
             }
             yield return null;
         }
@@ -394,7 +410,7 @@ public class Player_Controller : MonoBehaviour
 
     #region Checks--- Head, Body, Ground, Edge-----------------
     [Header("Checks")]
-    [SerializeField] private bool edgeCorrectionActive = true;
+    [SerializeField] private bool edgeCorrectionEnable = true;
     [SerializeField] private Vector2 groundCheckSize;
     private bool isCorrectingEdge;
     private bool isGrounded;
@@ -426,7 +442,11 @@ public class Player_Controller : MonoBehaviour
         {
             if(hits[i].collider.CompareTag("Tile"))
             {
-                jumpTimer = jumpDuration;
+                if (airTimeEnable && currentPlayerState == PlayerState.Jump)
+                {
+                    currentPlayerState = PlayerState.OnAir;
+                }
+                else currentPlayerState = PlayerState.Fall;
                 hits[i].collider.GetComponent<InteractableTile>().HandleInteraction(player.GetCurrentPower());
                 return;
             }
@@ -443,21 +463,9 @@ public class Player_Controller : MonoBehaviour
         {
             IsBottomEdge();
         }
-
-        for (int i = 0; i < hits.Length; i++)
-        {
-            if (hits[i].collider.CompareTag("Tile") || hits[i].collider.CompareTag("Ground"))
-            {
-                if(moveDir.x != 0)
-                {
-                    moveAcceleration = 0;
-                    sprintAcceleration = 0;
-                    moveDir.x = 0;
-                }
-                return;
-            }
-        }
     }
+
+    [Header("Top Edge")]
     [Range(0f, 0.175f)]
     [SerializeField] private float topEdgeCheckAreaSlider;
     [SerializeField] private float topEdgeCorrectionValue;
@@ -465,7 +473,7 @@ public class Player_Controller : MonoBehaviour
     private Vector3 rayCastPosition;
     private bool IsTopEdge()
     {
-        if(!edgeCorrectionActive)
+        if(!edgeCorrectionEnable)
         {
             isCorrectingEdge = false;
         }
@@ -475,7 +483,7 @@ public class Player_Controller : MonoBehaviour
             RaycastHit2D rightTopRay = Physics2D.Raycast(rayCastPosition, new Vector3(0, 1, 0), 0.1f, layerMask);
             if(rightTopRay.collider != null)
             {
-                edgeCorrectionVelocity = new Vector3(topEdgeCorrectionValue, 0, 0);
+                edgeCorrectionVelocity = new Vector3(-topEdgeCorrectionValue, 0, 0);
                 isCorrectingEdge = true;
                 return true;
             }
@@ -484,13 +492,14 @@ public class Player_Controller : MonoBehaviour
             RaycastHit2D leftTopRay = Physics2D.Raycast(rayCastPosition, new Vector3(0, 1, 0), 0.1f, layerMask);
             if (leftTopRay.collider != null)
             {
-                edgeCorrectionVelocity = new Vector3(-topEdgeCorrectionValue, 0, 0);
+                edgeCorrectionVelocity = new Vector3(topEdgeCorrectionValue, 0, 0);
                 isCorrectingEdge = true;
                 return true;
             }
         }
         return false;
     }
+    [Header("Bottom Edge")]
     [Range(0, 0.17f)]
     [SerializeField] private float bottomEdgeCheckAreaSlider;
     [SerializeField] private float bottomEdgeCorrectionValue;
@@ -498,7 +507,7 @@ public class Player_Controller : MonoBehaviour
 
     private bool IsBottomEdge()
     {
-        if (!edgeCorrectionActive)
+        if (!edgeCorrectionEnable)
         {
             isCorrectingEdge = false;
         }
@@ -542,9 +551,8 @@ public class Player_Controller : MonoBehaviour
         if(!isGrounded)
         {
             coyoteTimer += Time.deltaTime;
-            if(coyoteTimer >= coyoteDuration)
+            if(coyoteTimer >= coyoteDuration || currentPlayerState == PlayerState.Jump)
             {
-                coyoteTimer = 0;
                 isCoyoteTime = false;
             }
         }
@@ -552,6 +560,11 @@ public class Player_Controller : MonoBehaviour
         {
             isCoyoteTime = true;
         }
+    }
+
+    private void ResetCoyoteTimer()
+    {
+        coyoteTimer = 0;
     }
     #endregion
 
