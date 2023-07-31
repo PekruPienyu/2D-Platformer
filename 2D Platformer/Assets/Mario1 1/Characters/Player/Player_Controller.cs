@@ -135,7 +135,8 @@ public class Player_Controller : MonoBehaviour
         switch (currentPlayerState)
         {
             case PlayerState.Jump:
-                if(isJumping)
+                
+                if(isJumping) //If Jump key Pressed or max jump height not reached
                 {
                     moveDir.y = jumpForce * Time.fixedDeltaTime * 40;
                     heightCovered += moveDir.y;
@@ -143,18 +144,14 @@ public class Player_Controller : MonoBehaviour
                 else if(!isJumping)
                 {
                     moveDir.y = (jumpForce * Time.fixedDeltaTime * 40) - JumpDecelerationGravity();
-                    heightCovered += moveDir.y;
                 }
                 if(heightCovered > maxJumpHeight)
                 {
-                    heightCovered = 0;
                     isJumping = false;
                 }
-                Debug.Log(heightCovered);
                 if (moveDir.y <= 0)
                 {
-                    moveDir.y = 0;
-                    ResetJumpDecelerationMultiplier();
+                    ResetJumpVariables();
                     if (airTimeEnable)
                     {
                         onAir = true;
@@ -237,7 +234,7 @@ public class Player_Controller : MonoBehaviour
 
     [SerializeField] private float gravityJumpDeceleration;
     [SerializeField] private float gravityFallAcceleration;
-    private int gravityForceTimesAdded = 0;
+    private int gravityJumpDecelerationMultiplier = 0;
     private void ApplyGravityForFall()
     {
         moveDir.y -= gravityFallAcceleration;
@@ -249,13 +246,13 @@ public class Player_Controller : MonoBehaviour
 
     private float JumpDecelerationGravity()
     {
-        gravityForceTimesAdded++;
-        return gravityJumpDeceleration * gravityForceTimesAdded;
+        gravityJumpDecelerationMultiplier++;
+        return gravityJumpDeceleration * gravityJumpDecelerationMultiplier;
     }
 
     private void ResetJumpDecelerationMultiplier()
     {
-        gravityForceTimesAdded = 0;
+        gravityJumpDecelerationMultiplier = 0;
     }
     #endregion
 
@@ -326,6 +323,12 @@ public class Player_Controller : MonoBehaviour
         }
     }
 
+    private void ResetJumpVariables()
+    {
+        heightCovered = 0;
+        moveDir.y = 0;
+        ResetJumpDecelerationMultiplier();
+    }
 
     #endregion
 
@@ -450,6 +453,7 @@ public class Player_Controller : MonoBehaviour
         {
             if(hits[i].collider.CompareTag("Tile"))
             {
+                ResetJumpVariables();
                 if (airTimeEnable && currentPlayerState == PlayerState.Jump)
                 {
                     currentPlayerState = PlayerState.OnAir;

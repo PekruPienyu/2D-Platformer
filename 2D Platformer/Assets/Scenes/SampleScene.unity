@@ -2096,7 +2096,7 @@ MonoBehaviour:
   sprintAccelerationValue: 0.05
   sprintDecelerationStrength: 1
   jumpBufferEnable: 1
-  doubleJumpEnable: 1
+  doubleJumpEnable: 0
   jumpBufferDuration: 0.5
   jumpForceCurve:
     serializedVersion: 2
@@ -2131,8 +2131,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  jumpForce: 2
-  maxJumpHeight: 23
+  jumpForce: 1.5
+  maxJumpHeight: 15
   airTimeEnable: 1
   airTimeDuration: 0.05
   airTimeMoveSpeedAdd: 5
@@ -2149,7 +2149,7 @@ MonoBehaviour:
   bottomEdgeCorrectionValue: 0.7
   bottomRayYPosition: 0.45
   coyoteTimeActive: 1
-  coyoteDuration: 0.01
+  coyoteDuration: 0.05
 --- !u!95 &1392970764
 Animator:
   serializedVersion: 5
@@ -7806,7 +7806,7 @@ Tilemap:
   m_AnimationFrameRate: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Origin: {x: -17, y: -9, z: 0}
-  m_Size: {x: 209, y: 11, z: 1}
+  m_Size: {x: 209, y: 14, z: 1}
   m_TileAnchor: {x: 0.5, y: 0.5, z: 0}
   m_TileOrientation: 0
   m_TileOrientationMatrix:
