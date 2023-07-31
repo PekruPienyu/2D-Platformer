@@ -55,7 +55,6 @@ public class Player_Controller : MonoBehaviour
 
     private void Start()
     {
-        currentJumpHeight = minJumpHeight;
         pauseGame = false;
         playerControllerKeys.left = KeyCode.A;
         playerControllerKeys.right = KeyCode.D;
@@ -85,14 +84,9 @@ public class Player_Controller : MonoBehaviour
             }
             CheckJumpBuffer();
         }
-        else if (Input.GetKey(playerControllerKeys.jump) && currentPlayerState == PlayerState.Jump)
+        if (Input.GetKeyUp(KeyCode.Space))
         {
-            jumpHeightToAdd = jumpForce * 1.5f;
-            currentJumpHeight += jumpHeightToAdd * Time.deltaTime * 40;
-            if(currentJumpHeight >= maxJumpHeight)
-            {
-                currentJumpHeight = maxJumpHeight;
-            }
+            isJumping = false;
         }
         // Left Right
         if (Input.GetKey(playerControllerKeys.right))
@@ -122,10 +116,8 @@ public class Player_Controller : MonoBehaviour
 
     [Space]
     [SerializeField] private float maxJumpHeight;
-    [SerializeField] private float minJumpHeight;
-    private float jumpHeightToAdd;
-    private float currentJumpHeight;
-    private float coveredJumpHeight;
+    private bool isJumping;
+    private float heightCovered;
 
     [Header("Air Time")]
     [SerializeField] private bool airTimeEnable;
@@ -135,7 +127,6 @@ public class Player_Controller : MonoBehaviour
     private bool onAir;
 
     [Header("Fall")]
-    [SerializeField] private float fallAcceleration = 1f;
     [SerializeField] private float maxFallSpeed = 5f;
 
     private void FixedUpdate()
@@ -144,24 +135,26 @@ public class Player_Controller : MonoBehaviour
         switch (currentPlayerState)
         {
             case PlayerState.Jump:
-                player.ChangeAnimationToJump();
-
-                float coveredHeightNormalized = (coveredJumpHeight - minJumpHeight) / (currentJumpHeight - minJumpHeight);
-                float strength = jumpForceCurve.Evaluate(coveredHeightNormalized);
-
-                if (coveredJumpHeight < minJumpHeight)
+                if(isJumping)
                 {
-                    moveDir.y = jumpForce * Time.deltaTime * 40;
-                    coveredJumpHeight += moveDir.y;
+                    moveDir.y = jumpForce * Time.fixedDeltaTime * 40;
+                    heightCovered += moveDir.y;
                 }
-                else
+                else if(!isJumping)
                 {
-                    moveDir.y = jumpForce * strength * Time.deltaTime * 40;
-                    coveredJumpHeight += moveDir.y;
+                    moveDir.y = (jumpForce * Time.fixedDeltaTime * 40) - JumpDecelerationGravity();
+                    heightCovered += moveDir.y;
                 }
-                if(coveredJumpHeight >=  currentJumpHeight)
+                if(heightCovered > maxJumpHeight)
+                {
+                    heightCovered = 0;
+                    isJumping = false;
+                }
+                Debug.Log(heightCovered);
+                if (moveDir.y <= 0)
                 {
                     moveDir.y = 0;
+                    ResetJumpDecelerationMultiplier();
                     if (airTimeEnable)
                     {
                         onAir = true;
@@ -169,6 +162,7 @@ public class Player_Controller : MonoBehaviour
                     }
                     else currentPlayerState = PlayerState.Fall;
                 }
+                
                 break;
             case PlayerState.OnAir:
                 airTimeTimer += Time.deltaTime;
@@ -180,8 +174,7 @@ public class Player_Controller : MonoBehaviour
                 }
                 break;
             case PlayerState.Fall:
-
-                ApplyGravity();
+                ApplyGravityForFall();
                 if(isGrounded)
                 {
                     player.ChangeAnimationToIdle();
@@ -241,13 +234,28 @@ public class Player_Controller : MonoBehaviour
     #endregion
 
     #region Gravity----------------
-    private void ApplyGravity()
+
+    [SerializeField] private float gravityJumpDeceleration;
+    [SerializeField] private float gravityFallAcceleration;
+    private int gravityForceTimesAdded = 0;
+    private void ApplyGravityForFall()
     {
-        moveDir.y -= fallAcceleration;
+        moveDir.y -= gravityFallAcceleration;
         if (moveDir.y < -maxFallSpeed)
         {
             moveDir.y = -maxFallSpeed;
         }
+    }
+
+    private float JumpDecelerationGravity()
+    {
+        gravityForceTimesAdded++;
+        return gravityJumpDeceleration * gravityForceTimesAdded;
+    }
+
+    private void ResetJumpDecelerationMultiplier()
+    {
+        gravityForceTimesAdded = 0;
     }
     #endregion
 
@@ -255,9 +263,9 @@ public class Player_Controller : MonoBehaviour
     private void Jump()
     {
         jumpBuffer = false;
-        currentJumpHeight = minJumpHeight;
-        coveredJumpHeight = 0;
+        isJumping = true;
         currentPlayerState = PlayerState.Jump;
+        player.ChangeAnimationToJump();
     }
 
     private bool CanJump()
