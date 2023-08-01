@@ -7,13 +7,20 @@ using System;
 public class InteractableTile : MonoBehaviour
 {
     private SpriteRenderer spriteRenderer;
+    private BoxCollider2D boxCol;
 
     // Coin, PowerUp, Star ---------//
     public List<GameObject> itemPrefabs = new();
 
     public List<Sprite> tileSprites = new();
     public GameObject debrisPrefab;
-    public int mySpriteIndex;
+    public enum MySprite
+    { 
+        Normal,
+        QuestionMark,
+        Solid,
+    }
+    public MySprite mySprite;
     
     private int itemCount = 1;
     private int[] items;
@@ -27,14 +34,20 @@ public class InteractableTile : MonoBehaviour
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        boxCol = GetComponent<BoxCollider2D>();
         if (!containsItem) itemCount = 0;
         items = new int[itemCount];
-        spriteRenderer.sprite = tileSprites[mySpriteIndex];
+        spriteRenderer.sprite = tileSprites[(int)mySprite];
+    }
+
+    public Vector2 GetBoxColliderSize()
+    {
+        return boxCol.size;
     }
 
     public void HandleInteraction(int currentPlayerPower)
     {
-        if (mySpriteIndex == 2) return;
+        if ((int)mySprite == 2) return;
         if (itemCount == 0 && currentPlayerPower > 1)
         {
             DestroySelf();
@@ -42,8 +55,8 @@ public class InteractableTile : MonoBehaviour
         else if (itemCount == 0 && currentPlayerPower == 1)
         {
             Bounce();
-            mySpriteIndex = 2;
-            spriteRenderer.sprite = tileSprites[mySpriteIndex];
+            mySprite = MySprite.Solid;
+            spriteRenderer.sprite = tileSprites[(int)mySprite];
         }
     }
 
