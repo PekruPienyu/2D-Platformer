@@ -2225,13 +2225,13 @@ MonoBehaviour:
   gravityFallAcceleration: 0.1
   edgeCorrectionEnable: 1
   groundCheckSize: {x: 0.35, y: 0.1}
-  headCheckSize: {x: 0.19, y: 0.1}
-  bodyCheckSize: {x: 0.4, y: 0.25}
-  topEdgeCheckAreaSlider: 0.175
-  topEdgeCorrectionValue: 0.42
-  bottomEdgeCheckAreaSlider: 0.1
+  headCheckSize: {x: 0.37, y: 0.1}
+  topEdgeCorrectionAdd: 1
+  bodyCheckSize: {x: 0.4, y: 0.2}
+  bottomEdgeCheckSize: {x: 0.05, y: 0.15}
+  bottomEdgeCheckPos: {x: 0.17, y: 0.43, z: 0}
   bottomEdgeCorrectionValue: 0.7
-  bottomRayYPosition: 0.45
+  aheadCheckDistanceAdd: 0.04
   coyoteTimeActive: 1
   coyoteDuration: 0.05
 --- !u!95 &1392970764
@@ -11893,6 +11893,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 8532263377041380064, guid: d586a8bfe09abef479bfd87322b56707, type: 3}
+      propertyPath: mySprite
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 8532263377041380064, guid: d586a8bfe09abef479bfd87322b56707, type: 3}
       propertyPath: mySpriteIndex
       value: 0
