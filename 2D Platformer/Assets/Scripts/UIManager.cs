@@ -30,10 +30,7 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        leftKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.left.ToString();
-        rightKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.right.ToString();
-        jumpKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.jump.ToString();
-        sprintKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.sprint.ToString();
+        ResetAllButtonText();
     }
 
     private void Update()
@@ -70,6 +67,14 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    private void ResetAllButtonText()
+    {
+        leftKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.left.ToString();
+        rightKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.right.ToString();
+        jumpKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.jump.ToString();
+        sprintKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.sprint.ToString();
+    }
+
     public void GetKeyInputForLeft()
     {
         currentPlayerAction = PlayerAction.left;
@@ -100,14 +105,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void OnSaveButtonPressed()
-    {
-        ChangePlayerKeyLeft();
-        ChangePlayerKeyRight();
-        ChangePlayerKeyJump();
-        ChangePlayerKeySprint();
-    }
-
     public void OnBackButtonPressed()
     {
         settingsPanel.SetActive(false);
@@ -122,35 +119,9 @@ public class UIManager : MonoBehaviour
         playerController.pauseGame = true;
     }
 
-    public void ChangePlayerKeyLeft()
+    public void OnResetToDefaultButtonPressed()
     {
-        if (leftKeyButton.GetComponentInChildren<TMP_Text>().text.Length > 1) return;
-        char keyCode = leftKeyButton.GetComponentInChildren<TMP_Text>().text[0];
-        playerController.ChangePlayerKeyLeft(keyCode);
-        leftKeyButton.GetComponentInChildren<TMP_Text>().text = keyCode.ToString().ToUpper();
-    }
-
-    public void ChangePlayerKeyRight()
-    {
-        if (rightKeyButton.GetComponentInChildren<TMP_Text>().text.Length > 1) return;
-        char keyCode = rightKeyButton.GetComponentInChildren<TMP_Text>().text[0];
-        playerController.ChangePlayerKeyRight(keyCode);
-        rightKeyButton.GetComponentInChildren<TMP_Text>().text = keyCode.ToString().ToUpper();
-    }
-
-    public void ChangePlayerKeyJump()
-    {
-        if (jumpKeyButton.GetComponentInChildren<TMP_Text>().text.Length > 1) return;
-        char keyCode = jumpKeyButton.GetComponentInChildren<TMP_Text>().text[0];
-        playerController.ChangePlayerKeyJump(keyCode);
-        jumpKeyButton.GetComponentInChildren<TMP_Text>().text = keyCode.ToString().ToUpper();
-    }
-
-    public void ChangePlayerKeySprint()
-    {
-        if (sprintKeyButton.GetComponentInChildren<TMP_Text>().text.Length > 1) return;
-        char keyCode = sprintKeyButton.GetComponentInChildren<TMP_Text>().text[0];
-        playerController.ChangePlayerKeySprint(keyCode);
-        sprintKeyButton.GetComponentInChildren<TMP_Text>().text = keyCode.ToString().ToUpper();
+        playerControllerKeys.ResetToDefaultKeys();
+        ResetAllButtonText();
     }
 }

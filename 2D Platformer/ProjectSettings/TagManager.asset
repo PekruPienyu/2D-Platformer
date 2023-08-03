@@ -6,6 +6,10 @@ TagManager:
   tags:
   - Ground
   - Tile
+  - Coin
+  - PowerUp
+  - Star
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -15,8 +19,8 @@ TagManager:
   - UI
   - Ground
   - Tiles
-  - 
-  - 
+  - Misc
+  - Enemy
   - 
   - 
   - 
