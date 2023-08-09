@@ -6,11 +6,9 @@ public class Coin : Misc_Base
 {
     private Vector3 startPos;
     private Coroutine popUpRoutine;
-    private CapsuleCollider2D capsuleCol;
 
     public override void Configure(Vector3 origin)
     {
-        capsuleCol = GetComponent<CapsuleCollider2D>();
         transform.position = origin;
         startPos = origin;
         popUpRoutine = StartCoroutine(PopUp());
@@ -18,14 +16,14 @@ public class Coin : Misc_Base
 
     public override IEnumerator PopUp()
     {
-        while (transform.position.y < startPos.y + (capsuleCol.size.y * 2))
+        while (transform.position.y < startPos.y + (boxCol.size.y * 2))
         {
-            transform.Translate(3 * Time.deltaTime * Vector3.up);
+            transform.Translate(4 * Time.deltaTime * Vector3.up);
             yield return null;
         }
         while(transform.position.y > startPos.y)
         {
-            transform.Translate(3 * Time.deltaTime * Vector3.down);
+            transform.Translate(4 * Time.deltaTime * Vector3.down);
             yield return null;
         }
 
@@ -34,7 +32,7 @@ public class Coin : Misc_Base
         Destroy(gameObject);
     }
 
-    public override void UpdateCheckAndMovement()
+    public override void FixedUpdateMovementUpdate()
     {
         return;
     }

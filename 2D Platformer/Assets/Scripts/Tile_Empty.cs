@@ -6,7 +6,7 @@ using UnityEditor;
 public class Tile_Empty : Tile_Base
 {
     [SerializeField] private GameObject debrisPrefab;
-    public override void OnHit()
+    public override void OnHit(bool popOut)
     {
         if(Player.instance.GetCurrentPower() == 1)
         {
@@ -22,6 +22,7 @@ public class Tile_Empty : Tile_Base
 
     private void DeactivateAndSpawnDebris()
     {
+        CheckAbove();
         GameObject debris =  Instantiate(debrisPrefab);
         debris.GetComponent<Debris>().ConfigureDebris(transform.position ,new Vector2(1, 4));
         debris = Instantiate(debrisPrefab);

@@ -5,23 +5,33 @@ using UnityEngine;
 public class AIMove_Base : MonoBehaviour
 {
     private Rigidbody2D rb;
-    [HideInInspector] public BoxCollider2D boxCol;
+    protected BoxCollider2D boxCol;
     private Vector2 moveDir;
     [SerializeField] private float moveSpeed = 3f;
-    [SerializeField] private LayerMask layerMask;
+    [SerializeField] private LayerMask rayAheadLayer;
     private bool isGrounded;
     private bool jumpEnable;
+    private Vector2 localScaleReference;
+
+    private bool friendlyFire;
+    private bool isDead = false;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         boxCol = GetComponent<BoxCollider2D>();
-        moveDir = Vector2.right;
+        localScaleReference = transform.localScale;
+        FlipSprite();
+    }
+
+    private void Update()
+    {
+        UpdateCheckUpdate();
     }
 
     private void FixedUpdate()
     {
-        UpdateCheckAndMovement();
+        FixedUpdateMovementUpdate();
     }
 
     private Vector2 jumpVelocity;
@@ -31,17 +41,43 @@ public class AIMove_Base : MonoBehaviour
         jumpEnable = true;
     }
 
-    public virtual void UpdateCheckAndMovement()
+    public virtual void FixedUpdateMovementUpdate()
     {
-        CheckAhead();
-        GroundCheck();
+        if(!isDead) GroundCheck();
         ApplyGravity();
         if (isGrounded && jumpEnable)
         {
-            jumpVelocity = Vector2.up * 4;
+            jumpVelocity = Vector2.up * 3;
         }
         else if (!jumpEnable) jumpVelocity = Vector2.zero;
         rb.velocity = moveSpeed * Time.fixedDeltaTime * 40 * (moveDir + jumpVelocity);
+    }
+
+    public virtual void UpdateCheckUpdate()
+    {
+        CheckAhead();
+    }
+
+    public void SetFriendlyFire(bool active)
+    {
+        friendlyFire = active;
+    }
+
+    public bool IsFriendyFireActive()
+    {
+        return friendlyFire;
+    }
+
+    private void FlipSprite()
+    {
+        if(moveDir.x > 0)
+        {
+            transform.localScale = new Vector2(-localScaleReference.x, localScaleReference.y);
+        }
+        else if(moveDir.x < 0)
+        {
+            transform.localScale = localScaleReference;
+        }
     }
 
     public void StopMovement()
@@ -54,17 +90,58 @@ public class AIMove_Base : MonoBehaviour
         boxCol.enabled = isActive;
     }
 
+    public void SetInitialMoveDirection(Vector2 direction)
+    {
+        moveDir = direction;
+    }
+
+    public void SetMoveDirStrength(int strength)
+    {
+        moveDir.x = strength;
+    }
+
+    public void SetMoveDirDefault()
+    {
+        if(moveDir.x > 0)
+        {
+            moveDir.x = 1;
+        }
+        else
+        {
+            moveDir.x = -1;
+        }
+    }
+
+    public void PopOffScreenConfigure(Vector2 direction)
+    {
+        moveDir = direction;
+        isDead = true;
+        isGrounded = false;
+    }
+
     private Vector2 rayDir;
     private void CheckAhead()
     {
-        rayDir.x = moveDir.x;
-        RaycastHit2D ray = Physics2D.Raycast(boxCol.bounds.center, rayDir, boxCol.bounds.extents.x + 0.02f, layerMask);
-        Debug.DrawRay(boxCol.bounds.center, new Vector3(moveDir.x * (boxCol.bounds.extents.x + 0.02f), 0,0));
+        if (isDead) return;
+        if(moveDir.x != 0)rayDir.x = Mathf.Abs(moveDir.x)/moveDir.x;
+        RaycastHit2D[] rays = Physics2D.RaycastAll(boxCol.bounds.center, rayDir, boxCol.bounds.extents.x + 0.02f, rayAheadLayer);
+        Debug.DrawRay(boxCol.bounds.center, new Vector3(rayDir.x * (boxCol.bounds.extents.x + 0.02f), 0,0));
 
-        if (ray.collider != null)
+        for (int i = 0; i < rays.Length; i++)
         {
-            moveDir *= -1;
-        }
+            if (friendlyFire)
+            {
+                if (rays[i].collider.gameObject == gameObject || rays[i].collider.CompareTag("Enemy")) continue;
+                else moveDir.x *= -1;
+                FlipSprite();
+            }
+            else
+            {
+                if (rays[i].collider.gameObject == gameObject) continue;
+                else moveDir.x *= -1;
+                FlipSprite();
+            }
+        }    
     }
 
     [SerializeField] private float gravityForce = 0.1f;
@@ -89,13 +166,12 @@ public class AIMove_Base : MonoBehaviour
         }
     }
 
-    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.07f);
-    [SerializeField] private float groundCheckYPos = 0.25f;
+    [SerializeField] private LayerMask groundLayer;
     private Vector2 boxCastOrigin;
     private void GroundCheck()
     {
-        boxCastOrigin = new Vector2(transform.position.x, transform.position.y - groundCheckYPos);
-        RaycastHit2D hit = Physics2D.BoxCast(boxCastOrigin, groundCheckSize, 0, Vector2.zero, 0, layerMask);
+        boxCastOrigin = new Vector2(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y);
+        RaycastHit2D hit = Physics2D.BoxCast(boxCastOrigin, new Vector2(boxCol.size.x, 0.07f), 0, Vector2.zero, 0, groundLayer);
         if(hit.collider != null)
         {
             isGrounded = true;
@@ -108,8 +184,9 @@ public class AIMove_Base : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        boxCastOrigin = new Vector2(transform.position.x, transform.position.y - groundCheckYPos);
+        boxCol = GetComponent<BoxCollider2D>();
+        boxCastOrigin = new Vector2(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y);
         Gizmos.color = new(0, 1, 0, 0.6f);
-        Gizmos.DrawCube(boxCastOrigin, groundCheckSize);
+        Gizmos.DrawCube(boxCastOrigin, new Vector2(boxCol.size.x, 0.07f));
     }
 }

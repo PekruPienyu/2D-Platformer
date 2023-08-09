@@ -5,15 +5,15 @@ using UnityEngine;
 public class Player_Controller : MonoBehaviour
 {
     private Rigidbody2D rb;
-    private BoxCollider2D boxCol;
+    [SerializeField] private BoxCollider2D boxCol;
     [SerializeField] private BoxCollider2D boxColSmall;
     [SerializeField] private BoxCollider2D boxColLarge;
-    [SerializeField] private Player player;
     [SerializeField] private AnimationManager_Player playerAnimator;
-    [SerializeField] private LayerMask layerMask;
+    [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private GameObject playerBounds;
+    [SerializeField] private GameObject endPole;
     public PlayerControllerKeys_SO playerControllerKeys;
-    public bool pauseGame;
 
     [Header("Move")]
     [SerializeField] private float moveSpeed;
@@ -43,32 +43,50 @@ public class Player_Controller : MonoBehaviour
     private Coroutine moveSpeedDecelerateRoutine;
     private Coroutine sprintSpeedDecelerateRoutine;
     private KeyCode prevKeyPressed;
+    public bool pauseGame;
+    private bool isActive = true;
+    private bool movingToCastleAI;
+    public bool castleReached = false;
 
     private enum PlayerState
     {
         Jump,
         OnAir,
         Fall,
-        Grounded
+        Grounded,
+        GoalReached
     }
     private PlayerState currentPlayerState = PlayerState.Fall;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        SetCurrentBoxCollider();
-
     }
 
     private void Start()
     {
+        SetCurrentBoxCollider();
         pauseGame = false;
         topEdgeMaxCorrectionValue = boxCol.size.x * 0.5f;
     }
 
     void Update()
     {
-        if (pauseGame) return;
+        if(movingToCastleAI && (currentPlayerState == PlayerState.Grounded || currentPlayerState == PlayerState.Fall))
+        {
+            if (!castleReached)
+            {
+                playerAnimator.ChangeAnimationToRun();
+                GroundCheckBoxCast();
+                moveDir.x = 0.2f;
+            }
+            else
+            {
+                gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                moveDir = Vector2.zero;
+            }
+        }
+        if (pauseGame || !isActive) return;
         //Sprint
         if (Input.GetKey(playerControllerKeys.sprint))
         {
@@ -108,13 +126,24 @@ public class Player_Controller : MonoBehaviour
             moveSpeedDecelerateRoutine = StartCoroutine(DecelerateMoveSpeed());
             if (currentPlayerState == PlayerState.Grounded) playerAnimator.ChangeAnimationToIdle();
         }
-
         moveDir.x = (moveAcceleration + sprintAcceleration);
+    }
+
+    public void PauseGame()
+    {
+        pauseGame = true;
+        Time.timeScale = 0;
+    }
+
+    public void ResumeGame()
+    {
+        pauseGame = false;
+        Time.timeScale = 1;
     }
 
     [Space]
     [SerializeField] private float maxJumpHeight;
-    private bool isJumping;
+    public bool isJumping;
     private float heightCovered;
 
     [Header("Air Time")]
@@ -132,7 +161,7 @@ public class Player_Controller : MonoBehaviour
         //Checks & Timers
         CheckCoyoteTime();
         JumpBufferTimer();
-        GroundCheckBoxCast();
+        if(isActive)GroundCheckBoxCast();
         HeadCheckBoxCast();
         BodyCheckBoxCast();
 
@@ -156,7 +185,6 @@ public class Player_Controller : MonoBehaviour
                 }
                 if (moveDir.y <= 0)
                 {
-                    ResetJumpVariables();
                     if (airTimeEnable)
                     {
                         onAir = true;
@@ -177,7 +205,8 @@ public class Player_Controller : MonoBehaviour
                 break;
             case PlayerState.Fall:
                 ApplyGravityForFall();
-                if(isGrounded)
+                if(isActive)EnemyCheck();
+                if (isGrounded)
                 {
                     ConfigureDoubleJumpVariables();
                     ResetCoyoteTimer();
@@ -200,7 +229,17 @@ public class Player_Controller : MonoBehaviour
                     currentPlayerState = PlayerState.Fall;
                 }
                 break;
-            default:
+            case PlayerState.GoalReached:
+                GroundCheckBoxCast();
+                if (!isGrounded)
+                {
+                    transform.Translate(Vector2.down * Time.fixedDeltaTime * 2);
+                }
+                else
+                {
+                    if (transform.localScale.x < 0) transform.localScale = new Vector2(-transform.localScale.x, transform.localScale.y);
+                    currentPlayerState = PlayerState.Grounded;
+                }
                 break;
         }
         if(!isCorrectingEdge)
@@ -211,9 +250,34 @@ public class Player_Controller : MonoBehaviour
         rb.velocity = 50 * moveSpeed * Time.fixedDeltaTime * (moveDir + edgeCorrectionVelocity);
     }
 
-    private void SetCurrentBoxCollider()
+
+    public void StopPlayerMovement()
     {
-        if(player.IsPoweredUp())
+        moveDir = Vector2.zero;
+        rb.velocity = Vector2.zero;
+        moveAcceleration = 0;
+        sprintAcceleration = 0;
+    }
+
+    public void DisableBoxCollider()
+    {
+        boxColSmall.gameObject.SetActive(false);
+        boxColLarge.gameObject.SetActive(false);
+    }
+
+    public void EnableBoxCollider()
+    {
+        boxColSmall.gameObject.SetActive(true);
+    }
+
+    public void SetIsActive(bool _isActive)
+    {
+        isActive = _isActive;
+    }
+
+    public void SetCurrentBoxCollider()
+    {
+        if(Player.instance.IsPoweredUp())
         {
             boxCol = boxColLarge;
             boxColLarge.gameObject.SetActive(true);
@@ -225,6 +289,17 @@ public class Player_Controller : MonoBehaviour
             boxColLarge.gameObject.SetActive(false);
             boxColSmall.gameObject.SetActive(true);
         }
+    }
+
+    public void GoalReachedConfigure()
+    {
+        StopPlayerMovement();
+        SetIsActive(false);
+        movingToCastleAI = true;
+        transform.position = new Vector2(endPole.transform.position.x + 0.25f, transform.position.y);
+        if (transform.localScale.x > 0) transform.localScale = new Vector2(-transform.localScale.x, transform.localScale.y);
+        playerAnimator.ChangeAnimationToPoleGrab();
+        currentPlayerState = PlayerState.GoalReached;
     }
 
     #region Move----------------
@@ -274,12 +349,24 @@ public class Player_Controller : MonoBehaviour
     #endregion
 
     #region Jump Check And Functions----------------
-    private void Jump()
+    public void Jump()
     {
+        ResetJumpVariables();
         jumpBuffer = false;
         isJumping = true;
         playerAnimator.ChangeAnimationToJump();
         currentPlayerState = PlayerState.Jump;
+    }
+
+    public void PlayerDeathJump()
+    {
+        isActive = false;
+        isGrounded = false;
+        DisableBoxCollider();
+        StopPlayerMovement();
+        Jump();
+        playerAnimator.ChangeAnimationToDeath();
+        isJumping = false;
     }
 
     private bool CanJump()
@@ -441,13 +528,12 @@ public class Player_Controller : MonoBehaviour
     #region Checks--- Head, Body, Ground, Edge-----------------
     [Header("Checks")]
     [SerializeField] private bool edgeCorrectionEnable = true;
-    [SerializeField] private LayerMask groundCheckWithEnemyLayer;
     private bool isCorrectingEdge;
     private bool isGrounded;
     private float topEdgeMaxCorrectionValue;
     private void GroundCheckBoxCast()
     {
-        RaycastHit2D[] hits = Physics2D.BoxCastAll(new Vector3(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y), new Vector2(boxCol.size.x, 0.1f), 0, Vector2.zero, 0, groundCheckWithEnemyLayer);
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(new Vector3(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y), new Vector2(boxCol.size.x, 0.1f), 0, Vector2.zero, 0, groundLayer);
 
         if(hits.Length == 0)
         {
@@ -455,14 +541,6 @@ public class Player_Controller : MonoBehaviour
         }
         for (int i = 0; i < hits.Length; i++)
         {
-            if(hits[i].collider.CompareTag("Enemy"))
-            {
-                hits[i].collider.GetComponent<BirdHead>().OnHit();
-                ResetJumpVariables();
-                Jump();
-                isJumping = false;
-                break;
-            }
             if(hits[i].collider.CompareTag("Ground") || hits[i].collider.CompareTag("Tile"))
             {
                 isGrounded = true;
@@ -470,9 +548,22 @@ public class Player_Controller : MonoBehaviour
         }
     }
 
+    private void EnemyCheck()
+    {
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(new Vector3(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y), new Vector2(boxCol.size.x, 0.05f), 0, Vector2.zero, 0, enemyLayer);
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            hits[i].collider.GetComponent<IDamageable>().OnHit(false);
+            Player.instance.SetDamageable(false);
+            Jump();
+            isJumping = false;
+        }
+    }
+
     private void HeadCheckBoxCast()
     {
-        RaycastHit2D[] hits = Physics2D.BoxCastAll(new Vector3(boxCol.bounds.center.x, boxCol.bounds.center.y + boxCol.bounds.extents.y), new Vector2(boxCol.size.x, 0.1f), 0, Vector2.zero, 0, layerMask);
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(new Vector3(boxCol.bounds.center.x, boxCol.bounds.center.y + boxCol.bounds.extents.y), new Vector2(boxCol.size.x, 0.1f), 0, Vector2.zero, 0, groundLayer);
 
         if(hits.Length == 0)
         {
@@ -480,7 +571,7 @@ public class Player_Controller : MonoBehaviour
         }
         for (int i = 0; i < hits.Length; i++)
         {
-            if(hits[i].collider.CompareTag("Tile"))
+            if(hits[i].collider.CompareTag("Tile") && currentPlayerState == PlayerState.Jump)
             {
                 if (IsTopEdge(hits[i].collider.gameObject))
                 {
@@ -494,7 +585,7 @@ public class Player_Controller : MonoBehaviour
                         currentPlayerState = PlayerState.OnAir;
                     }
                     else currentPlayerState = PlayerState.Fall;
-                    hits[i].collider.GetComponent<Tile_Base>().OnHit();
+                    hits[i].collider.GetComponent<IDamageable>().OnHit(false);
                     return;
                 }
             }
@@ -503,7 +594,7 @@ public class Player_Controller : MonoBehaviour
 
     private void BodyCheckBoxCast()
     {
-        RaycastHit2D[] hits = Physics2D.BoxCastAll(boxCol.bounds.center, new Vector2(boxCol.size.x + 0.05f, boxCol.size.y * 0.8f), 0, Vector2.zero, 0, layerMask);
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(boxCol.bounds.center, new Vector2(boxCol.size.x + 0.1f, boxCol.size.y * 0.8f), 0, Vector2.zero, 0, groundLayer);
 
         if (hits.Length == 0)
         {
@@ -559,14 +650,14 @@ public class Player_Controller : MonoBehaviour
         else if (currentPlayerState == PlayerState.Jump || currentPlayerState == PlayerState.OnAir)
         {
             boxCastPosition = new Vector2(boxCol.bounds.center.x + boxCol.bounds.extents.x, boxCol.bounds.center.y - boxCol.bounds.extents.y + bottomEdgeCheckPos);
-            RaycastHit2D rightHit = Physics2D.BoxCast(boxCastPosition, bottomEdgeCheckSize, 0, Vector2.right, 0, layerMask);
+            RaycastHit2D rightHit = Physics2D.BoxCast(boxCastPosition, bottomEdgeCheckSize, 0, Vector2.right, 0, groundLayer);
             if (rightHit.collider != null)
             {
                 edgeCorrectionVelocity = new Vector3(0, bottomEdgeCorrectionValue, 0);
                 isCorrectingEdge = true;
             }
             boxCastPosition = new Vector2(boxCol.bounds.center.x - boxCol.bounds.extents.x, boxCol.bounds.center.y - boxCol.bounds.extents.y + bottomEdgeCheckPos);
-            RaycastHit2D leftHit = Physics2D.BoxCast(boxCastPosition, bottomEdgeCheckSize, 0, Vector2.right, 0, layerMask);
+            RaycastHit2D leftHit = Physics2D.BoxCast(boxCastPosition, bottomEdgeCheckSize, 0, Vector2.right, 0, groundLayer);
             if (leftHit.collider != null)
             {
                 edgeCorrectionVelocity = new Vector3(0, bottomEdgeCorrectionValue, 0);
@@ -582,14 +673,14 @@ public class Player_Controller : MonoBehaviour
     {
         aheadCheckDirection.x = direction;
 
-        RaycastHit2D rayAhead = Physics2D.Raycast(boxCol.bounds.center, aheadCheckDirection, boxCol.bounds.extents.x + aheadCheckDistanceAdd, layerMask);
-        RaycastHit2D rayBehind = Physics2D.Raycast(boxCol.bounds.center, aheadCheckDirection *-1, boxCol.bounds.extents.x + aheadCheckDistanceAdd, layerMask);
+        RaycastHit2D rayAhead = Physics2D.Raycast(boxCol.bounds.center, aheadCheckDirection, boxCol.bounds.extents.x + aheadCheckDistanceAdd, groundLayer);
+        RaycastHit2D rayBehind = Physics2D.Raycast(boxCol.bounds.center, aheadCheckDirection *-1, boxCol.bounds.extents.x + aheadCheckDistanceAdd, groundLayer);
 
         Debug.DrawRay(boxCol.bounds.center, new Vector3((boxCol.bounds.extents.x + aheadCheckDistanceAdd) * aheadCheckDirection.x, 0, 0));
         Debug.DrawRay(boxCol.bounds.center, new Vector3((boxCol.bounds.extents.x + aheadCheckDistanceAdd) * aheadCheckDirection.x *-1, 0, 0));
         if (rayAhead.collider != null)
         {
-            if (rayAhead.collider.CompareTag("Tile") || rayAhead.collider.CompareTag("Ground"))
+            if (rayAhead.collider.CompareTag("Tile") || rayAhead.collider.CompareTag("Ground") || rayAhead.collider.CompareTag("Boundry"))
             {
                 moveAcceleration = 0;
                 sprintAcceleration = 0;
@@ -646,7 +737,6 @@ public class Player_Controller : MonoBehaviour
     #region Gizmos Debugs------------
     private void OnDrawGizmos()
     {
-        SetCurrentBoxCollider();
         //Ground Check debug
         Gizmos.color = new(0, 1, 0, 0.6f);
         Gizmos.DrawCube(new Vector3(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y, transform.position.z), new Vector2(boxCol.size.x, 0.1f));

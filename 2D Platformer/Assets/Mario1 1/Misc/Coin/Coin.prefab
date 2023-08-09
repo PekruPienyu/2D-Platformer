@@ -9,10 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8563460023226724426}
-  - component: {fileID: 8563460023226724427}
   - component: {fileID: 8563460023226724424}
   - component: {fileID: 8563460023226724425}
   - component: {fileID: 2165813929554329292}
+  - component: {fileID: 2514456926697302100}
   m_Layer: 8
   m_Name: Coin
   m_TagString: Coin
@@ -35,22 +35,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!70 &8563460023226724427
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8563460023226724430}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: -0.0069915354, y: 0.012181237}
-  m_Size: {x: 0.2622891, y: 0.4790255}
-  m_Direction: 0
 --- !u!212 &8563460023226724424
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -136,12 +120,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af94a85c13d6a5c4fb9499d087b7950e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boxCol: {fileID: 0}
+  boxCol: {fileID: 2514456926697302100}
   moveSpeed: 0
   layerMask:
     serializedVersion: 2
     m_Bits: 0
   gravityForce: 0
   maxFallSpeed: 0
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
   groundCheckSize: {x: 0, y: 0}
-  groundCheckYPos: 0
+--- !u!61 &2514456926697302100
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8563460023226724430}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 0.5, y: 0.5}
+    newSize: {x: 0.5, y: 0.5}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.27289802, y: 0.44102484}
+  m_EdgeRadius: 0

@@ -5,7 +5,6 @@ using UnityEngine;
 public class AnimationManager_Player : MonoBehaviour
 {
     private Animator anim;
-    [SerializeField] private Player player;
 
     private void Awake()
     {
@@ -14,58 +13,88 @@ public class AnimationManager_Player : MonoBehaviour
 
     public void ChangeAnimationToIdle()
     {
-        switch (player.GetCurrentPower())
+        switch (Player.instance.GetCurrentPower())
         {
             case 1:
-                anim.Play("Idle_1");
+                anim.Play("Idle_Small");
                 break;
             case 2:
-                anim.Play("Idle_2");
+                anim.Play("Idle_Big");
                 break;
             case 3:
+                anim.Play("Idle_BigPowered");
                 break;
         }
     }
 
     public void ChangeAnimationToRun()
     {
-        switch (player.GetCurrentPower())
+        switch (Player.instance.GetCurrentPower())
         {
             case 1:
-                anim.Play("Run_1");
+                anim.Play("Run_Small");
                 break;
             case 2:
-                anim.Play("Run_2");
+                anim.Play("Run_Big");
                 break;
             case 3:
+                anim.Play("Run_BigPowered");
                 break;
         }
     }
 
     public void ChangeAnimationToJump()
     {
-        switch (player.GetCurrentPower())
+        switch (Player.instance.GetCurrentPower())
         {
             case 1:
-                anim.Play("Jump_1");
+                anim.Play("Jump_Small");
                 break;
             case 2:
-                anim.Play("Jump_2");
+                anim.Play("Jump_Big");
                 break;
             case 3:
+                anim.Play("Jump_BigPowered");
                 break;
         }
     }
 
-    public void AnimatePowerUp()
+    public void ChangeAnimationToPoleGrab()
     {
-        switch (player.GetCurrentPower())
+        switch (Player.instance.GetCurrentPower())
         {
             case 1:
-                anim.Play("PowerUp_1");
+                anim.Play("PoleGrab_Small");
                 break;
             case 2:
+                anim.Play("PoleGrab_Big");
+                break;
+            case 3:
+                anim.Play("PoleGrab_BigPowered");
                 break;
         }
+    }
+
+    public void ChangeAnimationToDeath()
+    {
+        anim.Play("Death");
+    }
+
+    public void AnimatePowerUp()
+    {
+        switch (Player.instance.GetCurrentPower())
+        {
+            case 1:
+                anim.Play("PowerUp_SmallToBig");
+                break;
+            case 2:
+                anim.Play("PowerUp_BigToBigPowered");
+                break;
+        }
+    }
+
+    public void AnimatePowerDown()
+    {
+        anim.Play("PowerDown");
     }
 }

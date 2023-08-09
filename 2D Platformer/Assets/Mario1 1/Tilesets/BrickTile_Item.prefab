@@ -99,6 +99,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isActive: 0
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 512
   itemPrefabs:
   - {fileID: 8563460023226724430, guid: f8f9a570c56b1af4b83f5bac914bfc53, type: 3}
   - {fileID: 2413821834255254693, guid: a94e111084e4f424293dd7282d8d32d3, type: 3}

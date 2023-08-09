@@ -7,16 +7,20 @@ using System;
 
 public class UIManager : MonoBehaviour
 {
-    public Player_Controller playerController;
-    public PlayerControllerKeys_SO playerControllerKeys;
-    public GameObject settingsPanel;
-    public GameObject backgroundPanel;
-    public Button leftKeyButton;
-    public Button rightKeyButton;
-    public Button jumpKeyButton;
-    public Button sprintKeyButton;
+    [SerializeField] private Player_Controller playerController;
+    [SerializeField] private PlayerControllerKeys_SO playerControllerKeys;
+    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private GameObject backgroundPanel;
+    [SerializeField] private Button leftKeyButton;
+    [SerializeField] private Button rightKeyButton;
+    [SerializeField] private Button jumpKeyButton;
+    [SerializeField] private Button sprintKeyButton;
+    [SerializeField] private TMP_Text coinCountText;
+    [SerializeField] private TMP_Text playerLiveText;
+    [SerializeField] private TMP_Text scoreText;
+    [SerializeField] private TMP_Text timeText;
 
-    public bool isTakingInput;
+    private bool isTakingInput;
 
     public enum PlayerAction
     {
@@ -31,6 +35,15 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         ResetAllButtonText();
+        coinCountText.text = "X " + Player.instance.GetCurrentCoinCount();
+        playerLiveText.text = "X " + Player.instance.GetCurrentLiveCount();
+        scoreText.text = "" + Player.instance.GetCurrentScore();
+        timeText.text = "" + Player.instance.GetCurrentRemainingTime();
+
+        Player.instance.coinAddEvent += UpdateCoinCount;
+        Player.instance.timeDecreaseEvent += UpdateRemainingtime;
+        Player.instance.scoreAddEvent += UpdateScore;
+        Player.instance.liveCountUpdateEvent += UpdateLiveCount;
     }
 
     private void Update()
@@ -65,6 +78,26 @@ public class UIManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void UpdateCoinCount()
+    {
+        coinCountText.text = "X " + Player.instance.GetCurrentCoinCount();
+    }
+
+    public void UpdateRemainingtime()
+    {
+        timeText.text = "" + Player.instance.GetCurrentRemainingTime();
+    }
+
+    public void UpdateScore()
+    {
+        scoreText.text = "" + Player.instance.GetCurrentScore();
+    }
+
+    public void UpdateLiveCount()
+    {
+        playerLiveText.text = "X " + Player.instance.GetCurrentLiveCount();
     }
 
     private void ResetAllButtonText()
@@ -109,14 +142,14 @@ public class UIManager : MonoBehaviour
     {
         settingsPanel.SetActive(false);
         backgroundPanel.SetActive(true);
-        playerController.pauseGame = false;
+        playerController.ResumeGame();
     }
 
     public void OnSettingsButtonPressed()
     {
         settingsPanel.SetActive(true);
         backgroundPanel.SetActive(false);
-        playerController.pauseGame = true;
+        playerController.PauseGame();
     }
 
     public void OnResetToDefaultButtonPressed()

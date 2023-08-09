@@ -19,7 +19,7 @@ public class PowerUp_Mushroom : Misc_Base
 
     public override IEnumerator PopUp()
     {
-        while(transform.position.y < startPos.y + boxCol.size.y)
+        while(transform.position.y < startPos.y + boxCol.size.y + 0.05f)
         {
            transform.Translate(Vector3.up * Time.deltaTime);
            yield return null;
@@ -29,10 +29,17 @@ public class PowerUp_Mushroom : Misc_Base
         if (popUpRoutine != null) popUpRoutine = null;
         yield return null;
     }
-    public override void UpdateCheckAndMovement()
+    public override void FixedUpdateMovementUpdate()
     {
         if (!isActive) return;
 
-        base.UpdateCheckAndMovement();
+        base.FixedUpdateMovementUpdate();
+    }
+
+    public override void UpdateCheckUpdate()
+    {
+        if (!isActive) return;
+
+        base.UpdateCheckUpdate();
     }
 }

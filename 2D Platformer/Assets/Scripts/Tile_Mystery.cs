@@ -9,7 +9,7 @@ public class Tile_Mystery : Tile_Base
     [SerializeField] private Sprite disabledSprite;
     [SerializeField] private MyItem item;
 
-    public override void OnHit()
+    public override void OnHit(bool popOut)
     {
         if (!isActive) return;
         Bounce();
@@ -24,6 +24,9 @@ public class Tile_Mystery : Tile_Base
             case MyItem.Coin:
                 _item = Instantiate(itemPrefabs[0]);
                 _item.GetComponent<Misc_Base>().Configure(transform.position);
+                Player.instance.AddCoin();
+                Player.instance.AddToScore(200);
+                FloatingScorePool.instance.GetFromPool(transform.position, 200);
                 break;
             case MyItem.PowerUp:
                 if (Player.instance.GetCurrentPower() > 1)

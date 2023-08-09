@@ -8,12 +8,13 @@ public enum MyItem
     PowerUp,
     Star
 }
-public abstract class Tile_Base : MonoBehaviour
+public abstract class Tile_Base : MonoBehaviour, IDamageable
 {
     private BoxCollider2D boxCol;
     private SpriteRenderer spriteRenderer;
 
     [HideInInspector] public bool isActive;
+    [SerializeField] private LayerMask enemyLayer;
 
     private void Awake()
     {
@@ -22,7 +23,7 @@ public abstract class Tile_Base : MonoBehaviour
         isActive = true;
     }
 
-    public abstract void OnHit();
+    public abstract void OnHit(bool popOut);
 
     public Vector2 GetBoxColliderSize()
     {
@@ -39,9 +40,21 @@ public abstract class Tile_Base : MonoBehaviour
 
     public void Bounce()
     {
+        CheckAbove();
         if (bounceRoutine == null)
         {
             bounceRoutine = StartCoroutine(StartBounce());
+        }
+    }
+
+    public void CheckAbove()
+    {
+        Vector2 boxCastPos = new(boxCol.bounds.center.x, boxCol.bounds.center.y + boxCol.bounds.extents.y);
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(boxCastPos, new Vector2(boxCol.size.x, 0.1f), 0, Vector2.zero, 0, enemyLayer);
+
+        foreach (var enemy in hits)
+        {
+            enemy.collider.GetComponent<IDamageable>().OnHit(true);
         }
     }
 
@@ -50,7 +63,7 @@ public abstract class Tile_Base : MonoBehaviour
     {
         Vector3 startPos = transform.position;
         float timer = 0f;
-        float duration = 0.07f;
+        float duration = 0.05f;
         while (timer < duration)
         {
             timer += Time.deltaTime;

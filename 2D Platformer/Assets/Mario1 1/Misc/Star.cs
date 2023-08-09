@@ -31,10 +31,17 @@ public class Star : Misc_Base
         yield return null;
     }
 
-    public override void UpdateCheckAndMovement()
+    public override void FixedUpdateMovementUpdate()
     {
         if (!isActive) return;
 
-        base.UpdateCheckAndMovement();
+        base.FixedUpdateMovementUpdate();
+    }
+
+    public override void UpdateCheckUpdate()
+    {
+        if (!isActive) return;
+
+        base.UpdateCheckUpdate();
     }
 }

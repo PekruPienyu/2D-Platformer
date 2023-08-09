@@ -26,9 +26,8 @@ public class PowerUp_Flower : Misc_Base
         yield return null;
     }
 
-    public override void UpdateCheckAndMovement()
+    public override void FixedUpdateMovementUpdate()
     {
         return;
     }
-
 }

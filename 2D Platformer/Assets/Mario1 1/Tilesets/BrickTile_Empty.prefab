@@ -99,7 +99,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isActive: 0
-  containsItem: 0
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 512
   debrisPrefab: {fileID: 936725797151154039, guid: f806de59b4cbc5948a2922dc6c9515ff, type: 3}
 --- !u!61 &9101589027765272979
 BoxCollider2D:
