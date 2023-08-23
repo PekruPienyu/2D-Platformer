@@ -43,7 +43,7 @@ public class AIMove_Base : MonoBehaviour
 
     public virtual void FixedUpdateMovementUpdate()
     {
-        if(!isDead) GroundCheck();
+        if (!isDead) GroundCheck();
         ApplyGravity();
         if (isGrounded && jumpEnable)
         {
@@ -70,11 +70,11 @@ public class AIMove_Base : MonoBehaviour
 
     private void FlipSprite()
     {
-        if(moveDir.x > 0)
+        if (moveDir.x > 0)
         {
             transform.localScale = new Vector2(-localScaleReference.x, localScaleReference.y);
         }
-        else if(moveDir.x < 0)
+        else if (moveDir.x < 0)
         {
             transform.localScale = localScaleReference;
         }
@@ -102,7 +102,7 @@ public class AIMove_Base : MonoBehaviour
 
     public void SetMoveDirDefault()
     {
-        if(moveDir.x > 0)
+        if (moveDir.x > 0)
         {
             moveDir.x = 1;
         }
@@ -123,9 +123,9 @@ public class AIMove_Base : MonoBehaviour
     private void CheckAhead()
     {
         if (isDead) return;
-        if(moveDir.x != 0)rayDir.x = Mathf.Abs(moveDir.x)/moveDir.x;
+        if (moveDir.x != 0) rayDir.x = Mathf.Abs(moveDir.x) / moveDir.x;
         RaycastHit2D[] rays = Physics2D.RaycastAll(boxCol.bounds.center, rayDir, boxCol.bounds.extents.x + 0.02f, rayAheadLayer);
-        Debug.DrawRay(boxCol.bounds.center, new Vector3(rayDir.x * (boxCol.bounds.extents.x + 0.02f), 0,0));
+        Debug.DrawRay(boxCol.bounds.center, new Vector3(rayDir.x * (boxCol.bounds.extents.x + 0.02f), 0, 0));
 
         for (int i = 0; i < rays.Length; i++)
         {
@@ -141,7 +141,7 @@ public class AIMove_Base : MonoBehaviour
                 else moveDir.x *= -1;
                 FlipSprite();
             }
-        }    
+        }
     }
 
     [SerializeField] private float gravityForce = 0.1f;
@@ -151,11 +151,11 @@ public class AIMove_Base : MonoBehaviour
         if (!isGrounded)
         {
             moveDir.y -= gravityForce;
-            if(jumpEnable)
+            if (jumpEnable)
             {
                 jumpVelocity.y -= gravityForce;
             }
-            if(moveDir.y <= -maxFallSpeed)
+            if (moveDir.y <= -maxFallSpeed)
             {
                 moveDir.y = -maxFallSpeed;
             }
@@ -172,7 +172,7 @@ public class AIMove_Base : MonoBehaviour
     {
         boxCastOrigin = new Vector2(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y);
         RaycastHit2D hit = Physics2D.BoxCast(boxCastOrigin, new Vector2(boxCol.size.x, 0.07f), 0, Vector2.zero, 0, groundLayer);
-        if(hit.collider != null)
+        if (hit.collider != null)
         {
             isGrounded = true;
         }
@@ -180,13 +180,5 @@ public class AIMove_Base : MonoBehaviour
         {
             isGrounded = false;
         }
-    }
-
-    private void OnDrawGizmos()
-    {
-        boxCol = GetComponent<BoxCollider2D>();
-        boxCastOrigin = new Vector2(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y);
-        Gizmos.color = new(0, 1, 0, 0.6f);
-        Gizmos.DrawCube(boxCastOrigin, new Vector2(boxCol.size.x, 0.07f));
     }
 }
