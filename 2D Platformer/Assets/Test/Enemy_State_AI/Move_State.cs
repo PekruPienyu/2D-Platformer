@@ -12,6 +12,9 @@ namespace CustomEnemyScript
         [SerializeField] private Vector2 initialMoveDir;
         [SerializeField] private float duration;
 
+
+        private float timer = 0;
+
         public override void Initialize()
         {
             moveDir = initialMoveDir;
@@ -19,11 +22,11 @@ namespace CustomEnemyScript
             physicsHandle.Initialize(moveDir, true, true, true, false);
         }
 
-        public override void EnterState(Vector2 _moveDir)
+        public override void EnterState(StateData_Helper data)
         {
-            if (_moveDir != Vector2.zero)
-                moveDir = _moveDir;
-            Invoke("ExitState", duration);
+            if(data.moveDir != Vector2.zero)moveDir = data.moveDir;
+            timer = 0;
+            physicsHandle.FlipSprite(moveDir);
         }
 
         public override void ExitState()
@@ -33,17 +36,30 @@ namespace CustomEnemyScript
 
         public override Vector2 StateFixedUpdate()
         {
-             moveDir = physicsHandle.ApplyPhysicsAndGetMoveDirection(moveDir);
+            moveDir = physicsHandle.ApplyPhysicsAndGetMoveDirection(moveDir);
             return moveSpeed * Time.fixedDeltaTime * 10 * moveDir;
         }
 
         public override void StateUpdate()
         {
-
+            physicsHandle.CheckForDamageableEntities();
+            if (duration != 0)
+            {
+                timer += Time.deltaTime;
+                if (timer >= duration)
+                {
+                    ExitState();
+                }
+            }
         }
         public override Vector2 GetMoveDirection()
         {
             return moveDir;
+        }
+
+        public override bool IsGrounded()
+        {
+            return physicsHandle.isGrounded;
         }
     }
 }

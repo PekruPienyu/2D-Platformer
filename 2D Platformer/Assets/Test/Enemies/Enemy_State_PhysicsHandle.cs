@@ -19,6 +19,7 @@ namespace CustomEnemyScript
             gravityEnable = gravityCheck;
             chechAheadEnable = checkAhead;
             friendlyFire = _friendlyFire;
+            localScaleReference = transform.root.localScale;
         }
 
         public Vector2 ApplyPhysicsAndGetMoveDirection(Vector2 _moveDir)
@@ -27,10 +28,11 @@ namespace CustomEnemyScript
             GroundCheck();
             ApplyGravity();
             CheckAhead();
+            CheckForDamageableEntities();
             return moveDir;
         }
 
-        private bool isGrounded;
+        public bool isGrounded;
         [SerializeField] private LayerMask groundLayer;
         [SerializeField] private BoxCollider2D boxCol;
         private Vector2 boxCastOrigin;
@@ -94,29 +96,61 @@ namespace CustomEnemyScript
             {
                 if (friendlyFire)
                 {
-                    if (rays[i].collider.gameObject == gameObject || rays[i].collider.CompareTag("Enemy")) continue;
+                    if (i == 0 || rays[i].collider.CompareTag("Enemy")) continue;
                     else moveDir.x *= -1;
-                    FlipSprite();
+                    FlipSprite(moveDir);
                 }
                 else
                 {
-                    if (rays[i].collider.gameObject == gameObject) continue;
+                    if (i == 0) continue;
                     else moveDir.x *= -1;
-                    FlipSprite();
+                    FlipSprite(moveDir);
                 }
             }
         }
 
-        private void FlipSprite()
+        public void FlipSprite(Vector2 _moveDir)
         {
-            if (moveDir.x > 0)
+            if (_moveDir.x > 0)
             {
-                transform.localScale = new Vector2(-localScaleReference.x, localScaleReference.y);
+                transform.root.localScale = new Vector2(-localScaleReference.x, localScaleReference.y);
             }
-            else if (moveDir.x < 0)
+            else if (_moveDir.x < 0)
             {
-                transform.localScale = localScaleReference;
+                transform.root.localScale = localScaleReference;
             }
+        }
+
+        [SerializeField] private LayerMask damageableLayer;
+        private Vector2 attackBox;
+
+        public void CheckForDamageableEntities()
+        {
+            attackBox = new Vector2(boxCol.size.x + 0.1f, boxCol.size.y * 0.5f);
+            RaycastHit2D[] hits = Physics2D.BoxCastAll(boxCol.bounds.center, attackBox, 0, Vector2.zero, 0, damageableLayer);
+
+            for (int i = 0; i < hits.Length; i++)
+            {
+                if (hits[i].collider.CompareTag("Player"))
+                {
+                    hits[i].collider.GetComponentInParent<IDamageable>().OnHit(true);
+                }
+                if ( hits[i].collider.CompareTag("Enemy"))
+                { 
+                    if (hits[i].collider.gameObject.transform.root == transform.root) return;
+                    else
+                    {
+                        hits[i].collider.GetComponentInParent<IDamageable>().OnHit(true);
+                    }
+                }
+            }
+        }
+
+        private void OnDrawGizmos()
+        {
+            attackBox = new Vector2(boxCol.size.x + 0.05f, boxCol.size.y * 0.5f);
+            Gizmos.color = Color.blue;
+            Gizmos.DrawCube(boxCol.bounds.center, attackBox);
         }
     }
 }

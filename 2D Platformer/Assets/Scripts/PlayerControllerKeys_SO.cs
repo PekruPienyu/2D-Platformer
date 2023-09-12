@@ -7,6 +7,7 @@ public class PlayerControllerKeys_SO : ScriptableObject
 {
     public KeyCode left;
     public KeyCode right;
+    public KeyCode down;
     public KeyCode jump;
     public KeyCode sprint;
 
@@ -19,6 +20,7 @@ public class PlayerControllerKeys_SO : ScriptableObject
     {
         left = KeyCode.A;
         right = KeyCode.D;
+        down = KeyCode.S;
         jump = KeyCode.Space;
         sprint = KeyCode.LeftShift;
     }

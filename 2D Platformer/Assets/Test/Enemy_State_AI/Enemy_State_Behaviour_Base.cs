@@ -25,8 +25,15 @@ namespace CustomEnemyScript
         public abstract Vector2 StateFixedUpdate();
         public abstract void StateUpdate();
 
-        public abstract void EnterState(Vector2 moveDir);
+        public abstract void EnterState(StateData_Helper data);
 
         public abstract Vector2 GetMoveDirection();
+
+        public abstract bool IsGrounded();
+    }
+
+    public struct StateData_Helper
+    {
+        public Vector2 moveDir;
     }
 }
