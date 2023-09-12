@@ -2,21 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 public class Player : MonoBehaviour, IDamageable
 {
+    private string FILE_PATH;
+
     private int powerLevel = 1;
     private int coinCount = 0;
     private int liveCount = 3;
     private int score = 0;
-    [SerializeField] private int timeLimitSeconds = 400;
+    [SerializeField] private GameObject bulletPrefab;
+    public int timeLimitSeconds = 400;
     private bool isDamageable = false;
     private AnimationManager_Player playerAnimator;
+    [SerializeField] private LayerMask secretEntranceScanRay;
     [SerializeField] private Player_Controller playerController;
-    [SerializeField] private GameObject deathLine;
-    [SerializeField] private GameObject spawnPoint;
+    [SerializeField] private Vector3 spawnPoint;
     [SerializeField] private LayerMask enemyLayer;
-    [SerializeField] private CameraFollow cam;
+
 
     public event Action coinAddEvent;
     public event Action timeDecreaseEvent;
@@ -34,6 +39,7 @@ public class Player : MonoBehaviour, IDamageable
     private float deathFallTimer;
 
     private bool goalReached;
+    [HideInInspector] public Vector2 facingDir;
 
     private void Awake()
     {
@@ -45,34 +51,67 @@ public class Player : MonoBehaviour, IDamageable
         {
             Destroy(gameObject);
         }
+        DontDestroyOnLoad(gameObject);
+        FILE_PATH = Path.Combine(Application.dataPath, "PlayerData.dat");
         powerLevel = 1;
     }
     void Start()
     {
+        SavePlayerData_NewScene();
         playerAnimator = GetComponent<AnimationManager_Player>();
-        transform.position = spawnPoint.transform.position;
     }
 
     private void Update()
     {
         if (playerController.pauseGame) return;
-        if(transform.position.y <= deathLine.transform.position.y && !isDeathFall)
-        {
-            PlayerDeath();
-        }
 
         if(!isDamageable)
         {
             immuneTimer += Time.deltaTime;
             if(immuneTimer >= 1f)
             {
-                immuneTimer = 0;
                 isDamageable = true;
             }
+        }
+
+        if(Input.GetKeyDown(KeyCode.C))
+        {
+            if (!playerController.isActive) return;
+            if(powerLevel == 3)
+            {
+            }
+                SpawnBullet();
+        }
+
+        if(Input.GetKeyDown(playerController.playerControllerKeys.down))
+        {
+            CheckForSecretEntrance();
         }
         DeathFallTimer();
         KillComboTimer();
         TimeLimitCountdown();
+    }
+
+    public void SavePlayerData_NewScene()
+    {
+        MainManager.instance.SavePlayerData_NextScene(score, coinCount, liveCount, spawnPoint);
+    }
+
+    public void LoadPlayerData_NewScene()
+    {
+        PlayerData_SceneLoad data = MainManager.instance.GetPlayerData();
+        score = data.score;
+        coinCount = data.coin;
+        liveCount = data.live;
+        spawnPoint = data.spawnPos;
+        timeLimitSeconds = 400;
+        UIManager.instance.UpdateUI();
+    }
+
+    private void SpawnBullet()
+    {
+        GameObject bullet = Instantiate(bulletPrefab);
+        bullet.GetComponent<BulletScript>().Initialize(transform.position, facingDir);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -82,18 +121,49 @@ public class Player : MonoBehaviour, IDamageable
             collision.gameObject.SetActive(false);
             AddCoin();
         }
-        if (collision.gameObject.CompareTag("Pole"))
+        if (collision.CompareTag("Pole"))
         {
             goalReached = true;
             playerController.GoalReachedConfigure();
             AddToScore(FindObjectOfType<EndPole>().GetHeightPoints(transform.position.y));
         }
-        if (collision.gameObject.CompareTag("Door"))
+        if (collision.CompareTag("Castle"))
         {
             playerController.castleReached = true;
             playerController.StopPlayerMovement();
-            StartCoroutine(ConvertTimeToPoints());
+            playerController.movingToCastleAI = false;
+            playerController.SetIsActive(false);
+            GetComponent<SpriteRenderer>().enabled = false;
+            MainManager.instance.StartConvertTime();
         }
+        if(collision.CompareTag("DeathLine"))
+        {
+            PlayerDeath();
+        }
+        if(collision.CompareTag("SavePoint"))
+        {
+            spawnPoint = collision.gameObject.transform.position;
+        }
+        if(collision.CompareTag("SecretRoomExit"))
+        {
+            playerController.isWalkingRightAI = true;
+            playerController.StopPlayerMovement();
+            playerAnimator.ChangeAnimationToRun();
+            playerController.SetIsActive(false);
+            playerController.DisableBoxCollider();
+        }
+    }
+
+    public void ConfigureNewSceneLoad()
+    {
+        goalReached = false;
+        playerController.castleReached = false;
+        if (SceneLoader.instance.GetCurrentSceneIndex() > 1)
+        {
+            playerController.endPole = FindObjectOfType<EndPole>().gameObject;
+            playerController.SetIsActive(true);
+        }
+        GetComponent<SpriteRenderer>().enabled = true;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -113,15 +183,40 @@ public class Player : MonoBehaviour, IDamageable
         }
     }
 
-    private IEnumerator ConvertTimeToPoints()
+    private void CheckForSecretEntrance()
     {
-        while(timeLimitSeconds != 0)
+        BoxCollider2D boxCol = GetComponentInChildren<BoxCollider2D>();
+        RaycastHit2D ray = Physics2D.Raycast(boxCol.bounds.center, Vector2.down, boxCol.bounds.extents.y + 0.1f, secretEntranceScanRay);
+
+        if(ray.collider != null)
         {
-            timeLimitSeconds--;
-            timeDecreaseEvent();
-            AddToScore(100);
-            yield return null;
+            playerAnimator.ChangeAnimationToIdle();
+            playerController.isElevatingDown = true;
+            playerController.StopPlayerMovement();
+            playerController.SetIsActive(false);
+            playerController.DisableBoxCollider();
         }
+    }
+
+    public void EnterSecretRoomConfigure()
+    {
+        CameraScript.instance.CameraFadeIn();
+        playerAnimator.ChangeAnimationToJump();
+        playerController.EnableBoxCollider();
+        FindObjectOfType<SpawnPointManager>().EnterSecretRoom();
+    }
+
+    public void ExitSecretRoomConfigure()
+    {
+        CameraScript.instance.CameraFadeIn();
+        playerAnimator.ChangeAnimationToIdle();
+        FindObjectOfType<SpawnPointManager>().ExitSecretRoom();
+        playerController.isElevatingUp = true;
+    }
+
+    public void SetPosition(Vector3 origin)
+    {
+        transform.position = origin;
     }
 
     public void AddCoin()
@@ -145,7 +240,7 @@ public class Player : MonoBehaviour, IDamageable
             if(deathFallTimer >= 2f)
             {
                 isDeathFall = false;
-                ResetPlayerPosition();
+                ReloadSceneOnDeath();
             }
         }
     }
@@ -184,9 +279,10 @@ public class Player : MonoBehaviour, IDamageable
         return false;
     }
 
-    public void SetDamageable(bool _isDamageable)
+    public void SetDamageableFalse()
     {
-        isDamageable = _isDamageable;
+        immuneTimer = 0;
+        isDamageable = false;
     }
 
     public void OnHit(bool popOut)
@@ -198,6 +294,7 @@ public class Player : MonoBehaviour, IDamageable
             powerLevel = 1;
             isDamageable = false;
             playerController.SetCurrentBoxCollider();
+            MainManager.instance.PauseGame();
             playerAnimator.AnimatePowerDown();
         }
         else
@@ -208,20 +305,32 @@ public class Player : MonoBehaviour, IDamageable
 
     public void PlayerDeath()
     {
+        SceneLoader.instance.isNewScene = false;
         playerController.PlayerDeathJump();
+        powerLevel = 1;
         deathFallTimer = 0;
         isDeathFall = true;
+        liveCount--;
+        liveCountUpdateEvent();
+        if(liveCount <= 0)
+        {
+            MainManager.instance.ResertPlayerData();
+        }
+        else SavePlayerData_NewScene();
     }
 
     public void ResetPlayerPosition()
     {
-        liveCount--;
-        liveCountUpdateEvent();
         playerAnimator.ChangeAnimationToIdle();
-        transform.position = spawnPoint.transform.position;
+        transform.position = spawnPoint;
         playerController.SetIsActive(true);
+        playerController.SetCurrentBoxCollider();
         playerController.EnableBoxCollider();
-        cam.ResetPositionToStart();
+    }
+
+    public void ReloadSceneOnDeath()
+    {
+        SceneLoader.instance.ReloadScene();
     }
 
     public void IncrementPower()
@@ -248,6 +357,11 @@ public class Player : MonoBehaviour, IDamageable
                 timeDecreaseEvent();
             }
         }
+    }
+
+    public void SetNewSpawnPos(Vector3 _spawnPoint)
+    {
+        spawnPoint = _spawnPoint;
     }
 
     public void GetDamaged()
@@ -278,5 +392,11 @@ public class Player : MonoBehaviour, IDamageable
     public int GetCurrentRemainingTime()
     {
         return timeLimitSeconds;
+    }
+
+    public void DecreaseTime(int seconds)
+    {
+        timeLimitSeconds -= seconds;
+        timeDecreaseEvent();
     }
 }

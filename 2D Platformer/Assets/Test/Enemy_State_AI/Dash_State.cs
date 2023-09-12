@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 namespace CustomEnemyScript
 {
@@ -14,19 +13,20 @@ namespace CustomEnemyScript
         [SerializeField] private Vector2 initialMoveDir;
         [SerializeField] private float duration;
 
+        private float timer = 0;
 
         public override void Initialize()
         {
             moveDir = initialMoveDir;
             physicsHandle = GetComponent<Enemy_State_PhysicsHandle>();
-            physicsHandle.Initialize(moveDir, true, true, true, false);
+            physicsHandle.Initialize(moveDir, true, true, true, true);
         }
 
-        public override void EnterState(Vector2 _moveDir)
+        public override void EnterState(StateData_Helper data)
         {
-            if(_moveDir != Vector2.zero)
-                moveDir = _moveDir;
-            Invoke("ExitState", duration);
+            if(data.moveDir != Vector2.zero)moveDir = data.moveDir;
+            timer = 0;
+            physicsHandle.FlipSprite(moveDir);
         }
 
         public override void ExitState()
@@ -42,12 +42,25 @@ namespace CustomEnemyScript
 
         public override void StateUpdate()
         {
-
+            physicsHandle.CheckForDamageableEntities();
+            if (duration != 0)
+            {
+                timer += Time.deltaTime;
+                if (timer >= duration)
+                {
+                    ExitState();
+                }
+            }
         }
 
         public override Vector2 GetMoveDirection()
         {
             return moveDir;
+        }
+
+        public override bool IsGrounded()
+        {
+            return physicsHandle.isGrounded;
         }
     }
 }

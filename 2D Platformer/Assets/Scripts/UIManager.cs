@@ -9,10 +9,12 @@ public class UIManager : MonoBehaviour
 {
     [SerializeField] private Player_Controller playerController;
     [SerializeField] private PlayerControllerKeys_SO playerControllerKeys;
+    [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private GameObject backgroundPanel;
     [SerializeField] private Button leftKeyButton;
     [SerializeField] private Button rightKeyButton;
+    [SerializeField] private Button downKeyButton;
     [SerializeField] private Button jumpKeyButton;
     [SerializeField] private Button sprintKeyButton;
     [SerializeField] private TMP_Text coinCountText;
@@ -22,15 +24,31 @@ public class UIManager : MonoBehaviour
 
     private bool isTakingInput;
 
+    public static UIManager instance;
+
     public enum PlayerAction
     {
         left,
         right,
+        down,
         jump,
         sprint,
     }
 
     private PlayerAction currentPlayerAction;
+
+    private void Awake()
+    {
+        if(instance == null)
+        {
+            instance = this;
+        }
+        if(instance != this)
+        {
+            Destroy(gameObject);
+        }
+        DontDestroyOnLoad(gameObject);
+    }
 
     private void Start()
     {
@@ -63,6 +81,10 @@ public class UIManager : MonoBehaviour
                         case PlayerAction.right:
                             playerControllerKeys.right = keyCode;
                             rightKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.right.ToString();
+                            break;
+                        case PlayerAction.down:
+                            playerControllerKeys.right = keyCode;
+                            downKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.down.ToString();
                             break;
                         case PlayerAction.jump:
                             playerControllerKeys.jump = keyCode;
@@ -100,10 +122,18 @@ public class UIManager : MonoBehaviour
         playerLiveText.text = "X " + Player.instance.GetCurrentLiveCount();
     }
 
+    public void UpdateUI()
+    {
+        UpdateLiveCount();
+        UpdateScore();
+        UpdateCoinCount();
+    }
+
     private void ResetAllButtonText()
     {
         leftKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.left.ToString();
         rightKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.right.ToString();
+        downKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.down.ToString();
         jumpKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.jump.ToString();
         sprintKeyButton.GetComponentInChildren<TMP_Text>().text = playerControllerKeys.sprint.ToString();
     }
@@ -120,36 +150,51 @@ public class UIManager : MonoBehaviour
         isTakingInput = true;
     }
 
+    public void GetKeyInputForDown()
+    {
+        currentPlayerAction = PlayerAction.down;
+        isTakingInput = true;
+    }
+
     public void GetKeyInputForJump()
     {
         currentPlayerAction = PlayerAction.jump;
-        if (!isTakingInput)
-        {
-            isTakingInput = true;
-        }
+        isTakingInput = true;
     }
 
     public void GetKeyInputForSprint()
     {
         currentPlayerAction = PlayerAction.sprint;
-        if (!isTakingInput)
-        {
-            isTakingInput = true;
-        }
+        isTakingInput = true;
+    }
+
+    public void LoadMainMenuPanel()
+    {
+        settingsPanel.SetActive(false);
+        mainMenuPanel.SetActive(true);
+        backgroundPanel.SetActive(false);
+    }
+
+    public void OnStartButtonPressed()
+    {
+        settingsPanel.SetActive(false);
+        mainMenuPanel.SetActive(false);
+        backgroundPanel.SetActive(true);
+        SceneLoader.instance.LoadNextScene();
     }
 
     public void OnBackButtonPressed()
     {
         settingsPanel.SetActive(false);
         backgroundPanel.SetActive(true);
-        playerController.ResumeGame();
+        MainManager.instance.ResumeGame();
     }
 
     public void OnSettingsButtonPressed()
     {
         settingsPanel.SetActive(true);
         backgroundPanel.SetActive(false);
-        playerController.PauseGame();
+        MainManager.instance.PauseGame();
     }
 
     public void OnResetToDefaultButtonPressed()

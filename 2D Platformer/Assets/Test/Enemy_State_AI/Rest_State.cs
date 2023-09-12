@@ -1,18 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 namespace CustomEnemyScript
 {
     public class Rest_State : Enemy_State_Behaviour_Base
     {
         private Enemy_State_PhysicsHandle physicsHandle;
-        private Vector2 moveDir;
+        private Vector2 moveDir = Vector2.zero;
         [SerializeField] private float moveSpeed = 10;
         [SerializeField] private Vector2 initialMoveDir;
         [SerializeField] private float duration;
 
+        private float timer = 0;
 
         public override void Initialize()
         {
@@ -21,9 +21,9 @@ namespace CustomEnemyScript
             physicsHandle.Initialize(moveDir, true, true, false, false);
         }
 
-        public override void EnterState(Vector2 _moveDir)
+        public override void EnterState(StateData_Helper data)
         {
-            Invoke("ExitState", duration);
+            timer = 0;
         }
 
         public override void ExitState()
@@ -39,12 +39,25 @@ namespace CustomEnemyScript
 
         public override void StateUpdate()
         {
-
+            physicsHandle.CheckForDamageableEntities();
+            if (duration != 0)
+            {
+                timer += Time.deltaTime;
+                if (timer >= duration)
+                {
+                    ExitState();
+                }
+            }
         }
 
         public override Vector2 GetMoveDirection()
         {
             return moveDir;
+        }
+
+        public override bool IsGrounded()
+        {
+            return physicsHandle.isGrounded;
         }
     }
 }

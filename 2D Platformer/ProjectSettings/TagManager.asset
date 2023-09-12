@@ -13,6 +13,11 @@ TagManager:
   - Boundry
   - Pole
   - Door
+  - DeathLine
+  - SavePoint
+  - SecretRoomExit
+  - Obstacle
+  - Castle
   layers:
   - Default
   - TransparentFX
@@ -26,7 +31,7 @@ TagManager:
   - Enemy
   - Player
   - Boundry
-  - 
+  - SecretRoom
   - 
   - 
   - 

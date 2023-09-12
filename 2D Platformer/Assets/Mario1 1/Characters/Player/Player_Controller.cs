@@ -11,8 +11,7 @@ public class Player_Controller : MonoBehaviour
     [SerializeField] private AnimationManager_Player playerAnimator;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private LayerMask enemyLayer;
-    [SerializeField] private GameObject playerBounds;
-    [SerializeField] private GameObject endPole;
+    [HideInInspector] public GameObject endPole;
     public PlayerControllerKeys_SO playerControllerKeys;
 
     [Header("Move")]
@@ -44,9 +43,13 @@ public class Player_Controller : MonoBehaviour
     private Coroutine sprintSpeedDecelerateRoutine;
     private KeyCode prevKeyPressed;
     public bool pauseGame;
-    private bool isActive = true;
-    private bool movingToCastleAI;
-    public bool castleReached = false;
+    [HideInInspector] public bool isActive = true;
+    [HideInInspector] public bool movingToCastleAI;
+    [HideInInspector] public bool castleReached = false;
+
+    [HideInInspector] public bool isElevatingUp;
+    [HideInInspector] public bool isElevatingDown;
+    [HideInInspector] public bool isWalkingRightAI;
 
     private enum PlayerState
     {
@@ -68,6 +71,8 @@ public class Player_Controller : MonoBehaviour
         SetCurrentBoxCollider();
         pauseGame = false;
         topEdgeMaxCorrectionValue = boxCol.size.x * 0.5f;
+        MainManager.instance.pauseGame += PauseGame;
+        MainManager.instance.resumeGame += ResumeGame;
     }
 
     void Update()
@@ -82,11 +87,20 @@ public class Player_Controller : MonoBehaviour
             }
             else
             {
+                movingToCastleAI = false;
                 gameObject.GetComponent<SpriteRenderer>().enabled = false;
                 moveDir = Vector2.zero;
             }
         }
-        if (pauseGame || !isActive) return;
+        if(isElevatingUp || isElevatingDown)
+        {
+            Elevate();
+        }
+        if(isWalkingRightAI)
+        {
+            WalkRight_AI();
+        }
+        if (!isActive || pauseGame) return;
         //Sprint
         if (Input.GetKey(playerControllerKeys.sprint))
         {
@@ -113,11 +127,13 @@ public class Player_Controller : MonoBehaviour
         // Left Right
         if (Input.GetKey(playerControllerKeys.right))
         {
+            Player.instance.facingDir = Vector2.right;
             Move(playerControllerKeys.right, 1);
             if (transform.localScale.x < 0) transform.localScale = new Vector2(-transform.localScale.x, transform.localScale.y);
         }
         if (Input.GetKey(playerControllerKeys.left))
         {
+            Player.instance.facingDir = Vector2.left;
             Move(playerControllerKeys.left, -1);
             if (transform.localScale.x > 0) transform.localScale = new Vector2(-transform.localScale.x, transform.localScale.y);
         }
@@ -132,13 +148,11 @@ public class Player_Controller : MonoBehaviour
     public void PauseGame()
     {
         pauseGame = true;
-        Time.timeScale = 0;
     }
 
     public void ResumeGame()
     {
         pauseGame = false;
-        Time.timeScale = 1;
     }
 
     [Space]
@@ -165,7 +179,11 @@ public class Player_Controller : MonoBehaviour
         HeadCheckBoxCast();
         BodyCheckBoxCast();
 
-        if (pauseGame) return;
+        if (pauseGame)
+        {
+            StopPlayerMovement();
+            return;
+        }
         switch (currentPlayerState)
         {
             case PlayerState.Jump:
@@ -250,6 +268,53 @@ public class Player_Controller : MonoBehaviour
         rb.velocity = 50 * moveSpeed * Time.fixedDeltaTime * (moveDir + edgeCorrectionVelocity);
     }
 
+    private float distanceAdded;
+
+    private void Elevate()
+    {
+        if(isElevatingUp)
+        {
+            transform.position = new(transform.position.x, transform.position.y + 1f * Time.deltaTime, transform.position.z);
+        }
+        else
+        {
+            transform.position = new(transform.position.x, transform.position.y - 1f * Time.deltaTime, transform.position.z);
+        }
+        distanceAdded += Mathf.Abs(1f * Time.deltaTime);
+        if (distanceAdded >= 0.7f)
+        {
+            EnableBoxCollider();
+            SetIsActive(true);
+            moveDir = Vector2.zero;
+            distanceAdded = 0;
+            if(isElevatingDown)
+            {
+                MainManager.instance.EnterSecretRoom();
+            }
+            isElevatingUp = false;
+            isElevatingDown = false;
+        }
+    }
+
+    private void WalkRight_AI()
+    {
+        playerAnimator.ChangeAnimationToRun();
+        transform.position = new(transform.position.x + 0.5f * Time.deltaTime, transform.position.y, transform.position.z);
+        distanceAdded += 0.5f * Time.deltaTime;
+        if (distanceAdded >= 0.7f)
+        {
+            isWalkingRightAI = false;
+            StopPlayerMovement();
+            moveDir = Vector2.zero;
+            distanceAdded = 0;
+            MainManager.instance.ExitSecretRoom();
+        }
+    }
+
+    public Vector2 GetMoveDir()
+    {
+        return moveDir;
+    }
 
     public void StopPlayerMovement()
     {
@@ -268,6 +333,8 @@ public class Player_Controller : MonoBehaviour
     public void EnableBoxCollider()
     {
         boxColSmall.gameObject.SetActive(true);
+        boxColLarge.gameObject.SetActive(true);
+        SetCurrentBoxCollider();
     }
 
     public void SetIsActive(bool _isActive)
@@ -539,23 +606,19 @@ public class Player_Controller : MonoBehaviour
         {
             isGrounded = false;
         }
-        for (int i = 0; i < hits.Length; i++)
+        else
         {
-            if(hits[i].collider.CompareTag("Ground") || hits[i].collider.CompareTag("Tile"))
-            {
-                isGrounded = true;
-            }
+            isGrounded = true;
         }
     }
 
     private void EnemyCheck()
     {
-        RaycastHit2D[] hits = Physics2D.BoxCastAll(new Vector3(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y), new Vector2(boxCol.size.x, 0.05f), 0, Vector2.zero, 0, enemyLayer);
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(new Vector3(boxCol.bounds.center.x, boxCol.bounds.center.y - boxCol.bounds.extents.y), new Vector2(boxCol.size.x, 0.2f), 0, Vector2.zero, 0, enemyLayer);
 
         for (int i = 0; i < hits.Length; i++)
         {
-            hits[i].collider.GetComponent<IDamageable>().OnHit(false);
-            Player.instance.SetDamageable(false);
+            hits[i].collider.GetComponentInParent<IDamageable>().OnHit(false);
             Jump();
             isJumping = false;
         }

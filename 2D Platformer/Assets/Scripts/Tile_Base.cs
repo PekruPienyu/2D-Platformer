@@ -54,7 +54,7 @@ public abstract class Tile_Base : MonoBehaviour, IDamageable
 
         foreach (var enemy in hits)
         {
-            enemy.collider.GetComponent<IDamageable>().OnHit(true);
+            enemy.collider.GetComponentInParent<IDamageable>().OnHit(true);
         }
     }
 
