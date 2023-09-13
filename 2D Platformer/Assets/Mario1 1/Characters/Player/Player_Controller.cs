@@ -291,7 +291,7 @@ public class Player_Controller : MonoBehaviour
             distanceAdded = 0;
             if(isElevatingDown)
             {
-                MainManager.instance.EnterSecretRoom();
+                SecretRoomManager.instance.EnterSecretRoom();
             }
             isElevatingUp = false;
             isElevatingDown = false;
@@ -309,7 +309,7 @@ public class Player_Controller : MonoBehaviour
             StopPlayerMovement();
             moveDir = Vector2.zero;
             distanceAdded = 0;
-            MainManager.instance.ExitSecretRoom();
+            SecretRoomManager.instance.ExitSecretRoom();
         }
     }
 
@@ -360,10 +360,11 @@ public class Player_Controller : MonoBehaviour
         }
     }
 
-    public void GoalReachedConfigure()
+    public void GoalReachedConfigure(GameObject pole)
     {
         StopPlayerMovement();
         SetIsActive(false);
+        endPole = pole;
         movingToCastleAI = true;
         transform.position = new Vector2(endPole.transform.position.x + 0.25f, transform.position.y);
         if (transform.localScale.x > 0) transform.localScale = new Vector2(-transform.localScale.x, transform.localScale.y);

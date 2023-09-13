@@ -7,6 +7,11 @@ public class EndPole : MonoBehaviour
     [SerializeField] private Transform lowestPoint;
     [SerializeField] private Transform highestpoint;
 
+    private void Awake()
+    {
+
+    }
+
     public int GetHeightPoints(float _currentYPos)
     {
         float currentYPos = _currentYPos - lowestPoint.position.y;

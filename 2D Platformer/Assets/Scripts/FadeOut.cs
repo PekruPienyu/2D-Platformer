@@ -25,6 +25,7 @@ public class FadeOut : MonoBehaviour
             alphaAdd += alphaAddSpeed * Time.deltaTime;
             if(alphaAdd >= 1)
             {
+                spriteRenderer.color = new(0, 0, 0, 1);
                 fadingOut = false;
             }
         }
@@ -34,6 +35,7 @@ public class FadeOut : MonoBehaviour
             alphaAdd -= alphaAddSpeed * Time.deltaTime;
             if (alphaAdd <= 0)
             {
+                spriteRenderer.color = new(0, 0, 0, 0);
                 fadingIn = false;
             }
         }

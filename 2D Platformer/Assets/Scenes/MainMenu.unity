@@ -545,6 +545,7 @@ GameObject:
   - component: {fileID: 104297209}
   - component: {fileID: 104297208}
   - component: {fileID: 104297207}
+  - component: {fileID: 104297214}
   m_Layer: 10
   m_Name: Player
   m_TagString: Player
@@ -612,7 +613,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4096
   playerController: {fileID: 104297210}
-  spawnPoint: {fileID: 0}
+  spawnPoint: {x: 0, y: 0, z: 0}
   enemyLayer:
     serializedVersion: 2
     m_Bits: 512
@@ -789,6 +790,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &104297214
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104297206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e33cd33c91acac34a85ea6751e8cbe47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &107810865
 GameObject:
   m_ObjectHideFlags: 0
@@ -888,10 +901,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   camStartPoint: {fileID: 846295388}
   playerStartPoint: {fileID: 1441812380}
-  secretEntranceSpawnPointCam: {fileID: 0}
-  secretExitSpawnPointCam: {fileID: 0}
-  secretEntranceSpawnPointPlayer: {fileID: 0}
-  secretExitSpawnPointPlayer: {fileID: 0}
 --- !u!4 &202065612
 Transform:
   m_ObjectHideFlags: 0
@@ -1618,6 +1627,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69f69d4a013a2c84699ddfc17d89aedf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isNewScene: 1
 --- !u!4 &421864932
 Transform:
   m_ObjectHideFlags: 0
