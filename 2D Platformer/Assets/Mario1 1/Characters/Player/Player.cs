@@ -79,8 +79,8 @@ public class Player : MonoBehaviour, IDamageable
             if (!playerController.isActive) return;
             if(powerLevel == 3)
             {
-            }
                 SpawnBullet();
+            }
         }
 
         if(Input.GetKeyDown(playerController.playerControllerKeys.down))
@@ -124,7 +124,7 @@ public class Player : MonoBehaviour, IDamageable
         if (collision.CompareTag("Pole"))
         {
             goalReached = true;
-            playerController.GoalReachedConfigure();
+            playerController.GoalReachedConfigure(collision.gameObject);
             AddToScore(FindObjectOfType<EndPole>().GetHeightPoints(transform.position.y));
         }
         if (collision.CompareTag("Castle"))
@@ -164,6 +164,7 @@ public class Player : MonoBehaviour, IDamageable
             playerController.SetIsActive(true);
         }
         GetComponent<SpriteRenderer>().enabled = true;
+        timeLimitSeconds = 400;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -195,22 +196,19 @@ public class Player : MonoBehaviour, IDamageable
             playerController.StopPlayerMovement();
             playerController.SetIsActive(false);
             playerController.DisableBoxCollider();
+            ray.collider.gameObject.GetComponent<SecretRoom_Helper>().SecretRoomConfigure();
         }
     }
 
     public void EnterSecretRoomConfigure()
     {
-        CameraScript.instance.CameraFadeIn();
         playerAnimator.ChangeAnimationToJump();
         playerController.EnableBoxCollider();
-        FindObjectOfType<SpawnPointManager>().EnterSecretRoom();
     }
 
     public void ExitSecretRoomConfigure()
     {
-        CameraScript.instance.CameraFadeIn();
         playerAnimator.ChangeAnimationToIdle();
-        FindObjectOfType<SpawnPointManager>().ExitSecretRoom();
         playerController.isElevatingUp = true;
     }
 

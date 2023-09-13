@@ -46,20 +46,6 @@ public class MainManager : MonoBehaviour
         return data;
     }
 
-
-
-    public void EnterSecretRoom()
-    {
-        CameraScript.instance.CameraFadeOut();
-        Player.instance.Invoke("EnterSecretRoomConfigure", 0.5f);
-    }
-
-    public void ExitSecretRoom()
-    {
-        CameraScript.instance.CameraFadeOut();
-        Player.instance.Invoke("ExitSecretRoomConfigure", 0.5f);
-    }
-
     public void StartConvertTime()
     {
         StartCoroutine(ConvertTimeToPoints());
@@ -71,7 +57,7 @@ public class MainManager : MonoBehaviour
         {
             Player.instance.DecreaseTime(1);
             Player.instance.AddToScore(100);
-            yield return null;
+            yield return new WaitForSeconds(0.01f);
         }
 
         CameraScript.instance.CameraFadeOut();
