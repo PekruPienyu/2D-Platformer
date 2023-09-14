@@ -62,7 +62,7 @@ public class Tortoise : Enemy_Base
                 anim.Play("Defence");
                 currentState = State.Slide;
                 SetFriendlyFire(true);
-                Player.instance.AddToScore(100);
+                MainManager.instance.AddToScore(100);
                 FloatingScorePool.instance.GetFromPool(transform.position, 100);
                 break;
             case State.Slide:

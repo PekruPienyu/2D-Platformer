@@ -52,7 +52,7 @@ public class BirdHead : Enemy_Base
 
         int score = 100 * Player.instance.GetKillComboPointMultiplier();
         Player.instance.ActivateKillComboTimer();
-        Player.instance.AddToScore(score);
+        MainManager.instance.AddToScore(score);
         FloatingScorePool.instance.GetFromPool(transform.position, score);
     }
 
