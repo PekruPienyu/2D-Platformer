@@ -5,7 +5,7 @@ using UnityEngine;
 public class CameraScript : MonoBehaviour
 {
     [SerializeField] private FadeOut fadeoutImage;
-    private GameObject startPos;
+    private Vector3 startPos;
     private Vector3 playerPos;
     private bool followPlayer;
 
@@ -33,11 +33,11 @@ public class CameraScript : MonoBehaviour
 
     public void SetToStartPosition()
     {
-        transform.position = startPos.transform.position;
+        transform.position = startPos;
         followPlayer = true;
     }
 
-    public void SetNewStartPos(GameObject newPos)
+    public void SetNewStartPos(Vector3 newPos)
     {
         startPos = newPos;
     }
@@ -56,5 +56,12 @@ public class CameraScript : MonoBehaviour
     public void CameraFadeIn()
     {
         fadeoutImage.FadeInScreen();
+    }
+
+    public void NewSceneConfigure(Vector3 newPos)
+    {
+        SetNewStartPos(newPos);
+        SetToStartPosition();
+        CameraFadeIn();
     }
 }

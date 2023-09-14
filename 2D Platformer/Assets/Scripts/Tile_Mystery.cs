@@ -24,8 +24,7 @@ public class Tile_Mystery : Tile_Base
             case MyItem.Coin:
                 _item = Instantiate(itemPrefabs[0]);
                 _item.GetComponent<Misc_Base>().Configure(transform.position);
-                Player.instance.AddCoin();
-                Player.instance.AddToScore(200);
+                MainManager.instance.AddCoin(false);
                 FloatingScorePool.instance.GetFromPool(transform.position, 200);
                 break;
             case MyItem.PowerUp:

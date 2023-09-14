@@ -9,8 +9,6 @@ public class SceneLoader : MonoBehaviour
     public Action onLoadCallBack;
     public static SceneLoader instance;
 
-    public bool isNewScene = true;
-
     private void Awake()
     {
         if (instance == null)
@@ -33,8 +31,6 @@ public class SceneLoader : MonoBehaviour
     {
         Scene scene = SceneManager.GetActiveScene();
         int sceneLoadIndex;
-
-        isNewScene = true;
         if (scene.buildIndex == 3)
         {
             sceneLoadIndex = 1;

@@ -1,30 +1,37 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class SpawnPointManager : MonoBehaviour
 {
     [SerializeField] private GameObject camStartPoint;
     [SerializeField] private GameObject playerStartPoint;
+    [HideInInspector] public Vector3 playerSavePoint;
+
     private void Start()
     {
-        SceneLoadConfigure();
+        playerSavePoint = playerStartPoint.transform.position;
+        MainManager.instance.ConfigureNewSceneLoad(this);
     }
 
-    public void SceneLoadConfigure()
+    public void SceneLoadConfigure(bool isNewScene)
     {
-        if(SceneLoader.instance.isNewScene)
+        if(isNewScene)
         {
-            Player.instance.SetNewSpawnPos(playerStartPoint.transform.position);
-            Player.instance.ConfigureNewSceneLoad();
+            Player.instance.ConfigureNewSceneLoad(playerSavePoint);
         }
-        else
-        {
-            Player.instance.LoadPlayerData_NewScene();
-        }
-        CameraScript.instance.SetNewStartPos(camStartPoint);
+        CameraScript.instance.NewSceneConfigure(camStartPoint.transform.position);
         Player.instance.ResetPlayerPosition();
-        CameraScript.instance.SetToStartPosition();
-        CameraScript.instance.CameraFadeIn();
+    }
+
+    public void SetPlayerSavePoint(Vector3 savePoint)
+    {
+        playerSavePoint = savePoint;
+    }
+
+    public void ResetPlayerSavePoint()
+    {
+        playerSavePoint = playerStartPoint.transform.position;
     }
 }

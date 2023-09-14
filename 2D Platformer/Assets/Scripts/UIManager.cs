@@ -53,15 +53,15 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         ResetAllButtonText();
-        coinCountText.text = "X " + Player.instance.GetCurrentCoinCount();
-        playerLiveText.text = "X " + Player.instance.GetCurrentLiveCount();
-        scoreText.text = "" + Player.instance.GetCurrentScore();
-        timeText.text = "" + Player.instance.GetCurrentRemainingTime();
+        coinCountText.text = "X " + MainManager.instance.GetCurrentCoinCount();
+        playerLiveText.text = "X " + MainManager.instance.GetCurrentLiveCount();
+        scoreText.text = "" + MainManager.instance.GetCurrentScore();
+        timeText.text = "" + MainManager.instance.GetCurrentRemainingTime();
 
-        Player.instance.coinAddEvent += UpdateCoinCount;
-        Player.instance.timeDecreaseEvent += UpdateRemainingtime;
-        Player.instance.scoreAddEvent += UpdateScore;
-        Player.instance.liveCountUpdateEvent += UpdateLiveCount;
+        MainManager.instance.coinAddEvent += UpdateCoinCount;
+        MainManager.instance.timeDecreaseEvent += UpdateRemainingtime;
+        MainManager.instance.scoreAddEvent += UpdateScore;
+        MainManager.instance.liveCountUpdateEvent += UpdateLiveCount;
     }
 
     private void Update()
@@ -104,22 +104,22 @@ public class UIManager : MonoBehaviour
 
     public void UpdateCoinCount()
     {
-        coinCountText.text = "X " + Player.instance.GetCurrentCoinCount();
+        coinCountText.text = "X " + MainManager.instance.GetCurrentCoinCount();
     }
 
     public void UpdateRemainingtime()
     {
-        timeText.text = "" + Player.instance.GetCurrentRemainingTime();
+        timeText.text = "" + MainManager.instance.GetCurrentRemainingTime();
     }
 
     public void UpdateScore()
     {
-        scoreText.text = "" + Player.instance.GetCurrentScore();
+        scoreText.text = "" + MainManager.instance.GetCurrentScore();
     }
 
     public void UpdateLiveCount()
     {
-        playerLiveText.text = "X " + Player.instance.GetCurrentLiveCount();
+        playerLiveText.text = "X " + MainManager.instance.GetCurrentLiveCount();
     }
 
     public void UpdateUI()
@@ -127,6 +127,7 @@ public class UIManager : MonoBehaviour
         UpdateLiveCount();
         UpdateScore();
         UpdateCoinCount();
+        UpdateRemainingtime();
     }
 
     private void ResetAllButtonText()

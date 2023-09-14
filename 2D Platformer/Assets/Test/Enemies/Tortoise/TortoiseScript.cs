@@ -67,7 +67,7 @@ namespace CustomEnemyScript
             {
                 ChangeStateToDeathPopOut();
                 Invoke("DeactivateSelf", 0.5f);
-                Player.instance.AddToScore(100);
+                MainManager.instance.AddToScore(100);
                 FloatingScorePool.instance.GetFromPool(transform.position, 100);
             }
             else
@@ -84,7 +84,7 @@ namespace CustomEnemyScript
                             ChangeStateToDash(Vector2.left);
                         }
                         else ChangeStateToDash(Vector2.right);
-                        Player.instance.AddToScore(100);
+                        MainManager.instance.AddToScore(100);
                         FloatingScorePool.instance.GetFromPool(transform.position, 100);
                         immuneToDamage = true;
                         break;

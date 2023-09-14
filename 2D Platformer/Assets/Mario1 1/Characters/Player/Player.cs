@@ -22,11 +22,7 @@ public class Player : MonoBehaviour, IDamageable
     [SerializeField] private Vector3 spawnPoint;
     [SerializeField] private LayerMask enemyLayer;
 
-
-    public event Action coinAddEvent;
-    public event Action timeDecreaseEvent;
-    public event Action scoreAddEvent;
-    public event Action liveCountUpdateEvent;
+    public event Action onPlayerDeathEvent;
 
     public static Player instance;
     private float immuneTimer;
@@ -35,10 +31,7 @@ public class Player : MonoBehaviour, IDamageable
     private bool isKillComboTime;
     private int killComboPointMultiplier = 1;
 
-    private bool isDeathFall;
-    private float deathFallTimer;
-
-    private bool goalReached;
+    [HideInInspector] public bool goalReached;
     [HideInInspector] public Vector2 facingDir;
 
     private void Awake()
@@ -57,7 +50,6 @@ public class Player : MonoBehaviour, IDamageable
     }
     void Start()
     {
-        SavePlayerData_NewScene();
         playerAnimator = GetComponent<AnimationManager_Player>();
     }
 
@@ -87,25 +79,7 @@ public class Player : MonoBehaviour, IDamageable
         {
             CheckForSecretEntrance();
         }
-        DeathFallTimer();
         KillComboTimer();
-        TimeLimitCountdown();
-    }
-
-    public void SavePlayerData_NewScene()
-    {
-        MainManager.instance.SavePlayerData_NextScene(score, coinCount, liveCount, spawnPoint);
-    }
-
-    public void LoadPlayerData_NewScene()
-    {
-        PlayerData_SceneLoad data = MainManager.instance.GetPlayerData();
-        score = data.score;
-        coinCount = data.coin;
-        liveCount = data.live;
-        spawnPoint = data.spawnPos;
-        timeLimitSeconds = 400;
-        UIManager.instance.UpdateUI();
     }
 
     private void SpawnBullet()
@@ -118,14 +92,14 @@ public class Player : MonoBehaviour, IDamageable
     {
         if(collision.CompareTag("Coin"))
         {
+            MainManager.instance.AddCoin(true);
             collision.gameObject.SetActive(false);
-            AddCoin();
         }
         if (collision.CompareTag("Pole"))
         {
             goalReached = true;
             playerController.GoalReachedConfigure(collision.gameObject);
-            AddToScore(FindObjectOfType<EndPole>().GetHeightPoints(transform.position.y));
+            MainManager.instance.AddToScore(FindObjectOfType<EndPole>().GetHeightPoints(transform.position.y));
         }
         if (collision.CompareTag("Castle"))
         {
@@ -142,7 +116,7 @@ public class Player : MonoBehaviour, IDamageable
         }
         if(collision.CompareTag("SavePoint"))
         {
-            spawnPoint = collision.gameObject.transform.position;
+            MainManager.instance.SetPlayerSavePoint(collision.transform.position);
         }
         if(collision.CompareTag("SecretRoomExit"))
         {
@@ -154,10 +128,11 @@ public class Player : MonoBehaviour, IDamageable
         }
     }
 
-    public void ConfigureNewSceneLoad()
+    public void ConfigureNewSceneLoad(Vector3 newPos)
     {
         goalReached = false;
         playerController.castleReached = false;
+        SetNewSpawnPos(newPos);
         if (SceneLoader.instance.GetCurrentSceneIndex() > 1)
         {
             playerController.endPole = FindObjectOfType<EndPole>().gameObject;
@@ -173,13 +148,13 @@ public class Player : MonoBehaviour, IDamageable
         {
             Destroy(collision.gameObject);
             playerAnimator.AnimatePowerUp();
-            AddToScore(1000);
+            MainManager.instance.AddToScore(1000);
             FloatingScorePool.instance.GetFromPool(transform.position, 1000);
         }
         if (collision.gameObject.CompareTag("Star"))
         {
             Destroy(collision.gameObject);
-            AddToScore(1000);
+            MainManager.instance.AddToScore(1000);
             FloatingScorePool.instance.GetFromPool(transform.position, 1000);
         }
     }
@@ -215,32 +190,6 @@ public class Player : MonoBehaviour, IDamageable
     public void SetPosition(Vector3 origin)
     {
         transform.position = origin;
-    }
-
-    public void AddCoin()
-    {
-        coinCount++;
-        AddToScore(200);
-        if(coinAddEvent != null)coinAddEvent();
-    }
-
-    public void AddToScore(int points)
-    {
-        score += points;
-        scoreAddEvent();
-    }
-
-    private void DeathFallTimer()
-    {
-        if(isDeathFall)
-        {
-            deathFallTimer += Time.deltaTime;
-            if(deathFallTimer >= 2f)
-            {
-                isDeathFall = false;
-                ReloadSceneOnDeath();
-            }
-        }
     }
 
     public void ActivateKillComboTimer()
@@ -292,7 +241,6 @@ public class Player : MonoBehaviour, IDamageable
             powerLevel = 1;
             isDamageable = false;
             playerController.SetCurrentBoxCollider();
-            MainManager.instance.PauseGame();
             playerAnimator.AnimatePowerDown();
         }
         else
@@ -303,18 +251,9 @@ public class Player : MonoBehaviour, IDamageable
 
     public void PlayerDeath()
     {
-        SceneLoader.instance.isNewScene = false;
         playerController.PlayerDeathJump();
         powerLevel = 1;
-        deathFallTimer = 0;
-        isDeathFall = true;
-        liveCount--;
-        liveCountUpdateEvent();
-        if(liveCount <= 0)
-        {
-            MainManager.instance.ResertPlayerData();
-        }
-        else SavePlayerData_NewScene();
+        if (onPlayerDeathEvent != null) onPlayerDeathEvent();
     }
 
     public void ResetPlayerPosition()
@@ -324,11 +263,6 @@ public class Player : MonoBehaviour, IDamageable
         playerController.SetIsActive(true);
         playerController.SetCurrentBoxCollider();
         playerController.EnableBoxCollider();
-    }
-
-    public void ReloadSceneOnDeath()
-    {
-        SceneLoader.instance.ReloadScene();
     }
 
     public void IncrementPower()
@@ -341,21 +275,7 @@ public class Player : MonoBehaviour, IDamageable
         playerController.SetCurrentBoxCollider();
     }
 
-    private float secondTimer;
-
-    private void TimeLimitCountdown()
-    {
-        if (!goalReached)
-        {
-            secondTimer += Time.deltaTime;
-            if (secondTimer >= 0.5f)
-            {
-                secondTimer = 0;
-                timeLimitSeconds--;
-                timeDecreaseEvent();
-            }
-        }
-    }
+    
 
     public void SetNewSpawnPos(Vector3 _spawnPoint)
     {
@@ -370,31 +290,5 @@ public class Player : MonoBehaviour, IDamageable
     public int GetCurrentPower()
     {
         return powerLevel;
-    }
-
-    public int GetCurrentCoinCount()
-    {
-        return coinCount;
-    }
-
-    public int GetCurrentScore()
-    {
-        return score;
-    }
-
-    public int GetCurrentLiveCount()
-    {
-        return liveCount;
-    }
-
-    public int GetCurrentRemainingTime()
-    {
-        return timeLimitSeconds;
-    }
-
-    public void DecreaseTime(int seconds)
-    {
-        timeLimitSeconds -= seconds;
-        timeDecreaseEvent();
     }
 }
