@@ -21,6 +21,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text playerLiveText;
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text timeText;
+    [SerializeField] private TMP_Text worldTitle;
 
     private bool isTakingInput;
 
@@ -100,6 +101,11 @@ public class UIManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void UpdateWorldTitle(string title)
+    {
+        worldTitle.text = "World "+title;
     }
 
     public void UpdateCoinCount()
@@ -182,6 +188,14 @@ public class UIManager : MonoBehaviour
         mainMenuPanel.SetActive(false);
         backgroundPanel.SetActive(true);
         SceneLoader.instance.LoadNextScene();
+    }
+
+    public void OnContinueButtonPressed()
+    {
+        settingsPanel.SetActive(false);
+        mainMenuPanel.SetActive(false);
+        backgroundPanel.SetActive(true);
+        SceneLoader.instance.LoadSavedScene();
     }
 
     public void OnBackButtonPressed()

@@ -5,23 +5,41 @@ using System;
 
 public class SpawnPointManager : MonoBehaviour
 {
-    [SerializeField] private GameObject camStartPoint;
-    [SerializeField] private GameObject playerStartPoint;
-    [HideInInspector] public Vector3 playerSavePoint;
+    [SerializeField] private Transform camStartPoint;
+    [SerializeField] private Transform playerStartPoint;
 
-    private void Start()
+    private Vector3 playerSavePoint;
+
+    public static SpawnPointManager instance;
+
+    private void Awake()
     {
-        playerSavePoint = playerStartPoint.transform.position;
-        MainManager.instance.ConfigureNewSceneLoad(this);
+        if (instance == null)
+        {
+            instance = this;
+        }
+        if (instance != this)
+        {
+            Destroy(gameObject);
+        }
+        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(camStartPoint.gameObject);
+        DontDestroyOnLoad(playerStartPoint.gameObject);
+        playerSavePoint = playerStartPoint.position;
     }
 
-    public void SceneLoadConfigure(bool isNewScene)
+    public void SceneLoadConfigure()
     {
-        if(isNewScene)
+        if(playerSavePoint != playerStartPoint.position)
         {
-            Player.instance.ConfigureNewSceneLoad(playerSavePoint);
+            MainManager.instance.ConfigureSavePointLoad();
         }
-        CameraScript.instance.NewSceneConfigure(camStartPoint.transform.position);
+        else
+        {
+            MainManager.instance.ConfigureNewSceneLoad();
+        }
+        Player.instance.SetNewSpawnPos(playerSavePoint);
+        CameraScript.instance.NewSceneConfigure(camStartPoint.position);
         Player.instance.ResetPlayerPosition();
     }
 
@@ -32,6 +50,6 @@ public class SpawnPointManager : MonoBehaviour
 
     public void ResetPlayerSavePoint()
     {
-        playerSavePoint = playerStartPoint.transform.position;
+        playerSavePoint = playerStartPoint.position;
     }
 }

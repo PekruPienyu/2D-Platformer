@@ -8,9 +8,9 @@ public class MainManager : MonoBehaviour
 {
     public static MainManager instance;
 
-    private PlayerData_SceneLoad data = new();
-    public event Action pauseGame;
-    public event Action resumeGame;
+    public PlayerData_SO data;
+    public event Action pauseGameEvent;
+    public event Action resumeGameEvent;
     
     public int coinCount = 0;
     public int liveCount = 3;
@@ -21,8 +21,6 @@ public class MainManager : MonoBehaviour
     public event Action timeDecreaseEvent;
     public event Action scoreAddEvent;
     public event Action liveCountUpdateEvent;
-
-    private SpawnPointManager spawnPointManager;
 
     public bool isNewScene = true;
 
@@ -37,7 +35,6 @@ public class MainManager : MonoBehaviour
             Destroy(gameObject);
         }
         DontDestroyOnLoad(gameObject);
-        data.live = liveCount;
     }
 
     private void Start()
@@ -50,19 +47,21 @@ public class MainManager : MonoBehaviour
         TimeLimitCountdown();
     }
 
-    public void ConfigureNewSceneLoad(SpawnPointManager spawnManager)
+    public void ConfigureNewSceneLoad()
     {
-        spawnPointManager = spawnManager;
         ResetTimer();
-        if(isNewScene)
-        {
-            SavePlayerData_NewScene();
-        }
-        else LoadPlayerData_NewScene();
-        spawnPointManager.SceneLoadConfigure(isNewScene);
+        SavePlayerData_NewScene();
+        Player.instance.ConfigureNewSceneLoad();
+        UIManager.instance.UpdateUI();
     }
 
-    public void AddCoin(bool floatingScore)
+    public void ConfigureSavePointLoad()
+    {
+        ResetTimer();
+        LoadPlayerData_NewScene();
+    }
+
+    public void AddCoin()
     {
         coinCount++;
         if(coinCount >= 100)
@@ -72,7 +71,6 @@ public class MainManager : MonoBehaviour
             liveCountUpdateEvent();
         }
         AddToScore(200);
-        if (floatingScore) FloatingScorePool.instance.GetFromPool(Player.instance.transform.position, 200);
         if (coinAddEvent != null) coinAddEvent();
     }
 
@@ -81,6 +79,7 @@ public class MainManager : MonoBehaviour
         score += points;
         if(scoreAddEvent != null)scoreAddEvent();
     }
+
     public void DecreaseTime(int seconds)
     {
         timeLimitSeconds -= seconds;
@@ -92,14 +91,14 @@ public class MainManager : MonoBehaviour
         data.score = score;
         data.coin = coinCount;
         data.live = liveCount;
-        data.spawnPos = spawnPointManager.playerSavePoint;
+        data.powerLevel = Player.instance.GetCurrentPower();
     }
     public void LoadPlayerData_NewScene()
     {
         score = data.score;
         coinCount = data.coin;
         liveCount = data.live;
-        Player.instance.SetNewSpawnPos(data.spawnPos);
+        Player.instance.SetPowerLevel(data.powerLevel);
         UIManager.instance.UpdateUI();
     }
 
@@ -108,7 +107,8 @@ public class MainManager : MonoBehaviour
         score = 0;
         coinCount = 0;
         liveCount = 3;
-        spawnPointManager.ResetPlayerSavePoint();
+        Player.instance.SetPowerLevel(1);
+        SpawnPointManager.instance.ResetPlayerSavePoint();
     }
 
     public void ResetTimer()
@@ -116,12 +116,7 @@ public class MainManager : MonoBehaviour
         timeLimitSeconds = 400;
     }
 
-    public void SetPlayerSavePoint(Vector3 newPos)
-    {
-        spawnPointManager.SetPlayerSavePoint(newPos);
-    }
-
-    public PlayerData_SceneLoad GetPlayerData()
+    public PlayerData_SO GetPlayerData()
     {
         return data;
     }
@@ -141,20 +136,20 @@ public class MainManager : MonoBehaviour
         }
 
         CameraScript.instance.CameraFadeOut();
-        isNewScene = true;
         SceneLoader.instance.Invoke("LoadNextScene", 1f);
+        SpawnPointManager.instance.ResetPlayerSavePoint();
         SavePlayerData_NewScene();
     }
 
     public void PauseGame()
     {
-        if(pauseGame != null)pauseGame();
+        if(pauseGameEvent != null) pauseGameEvent();
         Time.timeScale = 0;
     }
 
     public void ResumeGame()
     {
-        if(resumeGame != null)resumeGame();
+        if(resumeGameEvent != null) resumeGameEvent();
         Time.timeScale = 1;
     }
 
@@ -201,11 +196,6 @@ public class MainManager : MonoBehaviour
         if (liveCount == 0)
         {
             ResertPlayerData();
-            isNewScene = true;
-        }
-        else
-        {
-            isNewScene = false;
         }
         SavePlayerData_NewScene();
         StartCoroutine(PlayerDeathRoutine());
@@ -214,7 +204,6 @@ public class MainManager : MonoBehaviour
     private IEnumerator PlayerDeathRoutine()
     {
         yield return new WaitForSeconds(2);
-        isNewScene = false;
         SceneLoader.instance.ReloadScene();
     }
 }
