@@ -31,7 +31,7 @@ public class SceneLoader : MonoBehaviour
     {
         Scene scene = SceneManager.GetActiveScene();
         int sceneLoadIndex;
-        if (scene.buildIndex == 3)
+        if (scene.buildIndex == 5)
         {
             sceneLoadIndex = 1;
         }
@@ -57,6 +57,9 @@ public class SceneLoader : MonoBehaviour
         while (!asyncOperation.isDone)
         {
             yield return null;
+            MainManager.instance.GetPlayerData().worldIndex = sceneIndex;
+            UIManager.instance.UpdateWorldTitle((sceneIndex-1).ToString());
+            SpawnPointManager.instance.SceneLoadConfigure();
         }
     }
 
@@ -79,5 +82,22 @@ public class SceneLoader : MonoBehaviour
     {
         Scene scene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(scene.buildIndex);
+        SpawnPointManager.instance.SceneLoadConfigure();
+    }
+
+    public void LoadSavedScene()
+    {
+        int sceneLoadIndex = MainManager.instance.GetPlayerData().worldIndex;
+        onLoadCallBack = () =>
+        {
+            if (sceneLoadIndex == 1)
+            {
+                UIManager.instance.LoadMainMenuPanel();
+            }
+            StartCoroutine(LoadSceneAsync(sceneLoadIndex));
+            MainManager.instance.LoadPlayerData_NewScene();
+        };
+
+        LoadScene(0);
     }
 }

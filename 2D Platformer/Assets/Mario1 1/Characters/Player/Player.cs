@@ -7,12 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class Player : MonoBehaviour, IDamageable
 {
-    private string FILE_PATH;
-
     private int powerLevel = 1;
-    private int coinCount = 0;
-    private int liveCount = 3;
-    private int score = 0;
     [SerializeField] private GameObject bulletPrefab;
     public int timeLimitSeconds = 400;
     private bool isDamageable = false;
@@ -45,8 +40,6 @@ public class Player : MonoBehaviour, IDamageable
             Destroy(gameObject);
         }
         DontDestroyOnLoad(gameObject);
-        FILE_PATH = Path.Combine(Application.dataPath, "PlayerData.dat");
-        powerLevel = 1;
     }
     void Start()
     {
@@ -92,7 +85,7 @@ public class Player : MonoBehaviour, IDamageable
     {
         if(collision.CompareTag("Coin"))
         {
-            MainManager.instance.AddCoin(true);
+            MainManager.instance.AddCoin();
             collision.gameObject.SetActive(false);
         }
         if (collision.CompareTag("Pole"))
@@ -116,7 +109,7 @@ public class Player : MonoBehaviour, IDamageable
         }
         if(collision.CompareTag("SavePoint"))
         {
-            MainManager.instance.SetPlayerSavePoint(collision.transform.position);
+            SpawnPointManager.instance.SetPlayerSavePoint(collision.transform.position);
         }
         if(collision.CompareTag("SecretRoomExit"))
         {
@@ -128,11 +121,10 @@ public class Player : MonoBehaviour, IDamageable
         }
     }
 
-    public void ConfigureNewSceneLoad(Vector3 newPos)
+    public void ConfigureNewSceneLoad()
     {
         goalReached = false;
         playerController.castleReached = false;
-        SetNewSpawnPos(newPos);
         if (SceneLoader.instance.GetCurrentSceneIndex() > 1)
         {
             playerController.endPole = FindObjectOfType<EndPole>().gameObject;
@@ -190,6 +182,11 @@ public class Player : MonoBehaviour, IDamageable
     public void SetPosition(Vector3 origin)
     {
         transform.position = origin;
+    }
+
+    public void SetPowerLevel(int power)
+    {
+        powerLevel = power;
     }
 
     public void ActivateKillComboTimer()

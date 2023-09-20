@@ -50,7 +50,7 @@ public class Tile_Item : Tile_Base
             case MyItem.Coin:
                 _item = Instantiate(itemPrefabs[0]);
                 _item.GetComponent<Misc_Base>().Configure(transform.position);
-                MainManager.instance.AddCoin(false);
+                MainManager.instance.AddCoin();
                 FloatingScorePool.instance.GetFromPool(transform.position, 200);
                 break;
             case MyItem.PowerUp:

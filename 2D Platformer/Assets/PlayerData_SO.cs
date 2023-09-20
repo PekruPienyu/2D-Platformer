@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerData_SceneLoad
+[CreateAssetMenu(menuName = "ScriptableObjects/PlayerData")]
+public class PlayerData_SO : ScriptableObject
 {
     public Vector3 spawnPos;
     public int score;
     public int coin;
     public int live;
+    public int worldIndex;
+    public int powerLevel;
 }

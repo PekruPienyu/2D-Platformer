@@ -71,8 +71,8 @@ public class Player_Controller : MonoBehaviour
         SetCurrentBoxCollider();
         pauseGame = false;
         topEdgeMaxCorrectionValue = boxCol.size.x * 0.5f;
-        MainManager.instance.pauseGame += PauseGame;
-        MainManager.instance.resumeGame += ResumeGame;
+        MainManager.instance.pauseGameEvent += PauseGame;
+        MainManager.instance.resumeGameEvent += ResumeGame;
     }
 
     void Update()
