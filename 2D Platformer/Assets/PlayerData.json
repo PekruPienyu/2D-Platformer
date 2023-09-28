@@ -1,0 +1,12 @@
+{
+    "spawnPos": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "score": 0,
+    "coin": 0,
+    "live": 3,
+    "worldIndex": 1,
+    "powerLevel": 1
+}

@@ -12,6 +12,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private GameObject backgroundPanel;
+    [SerializeField] private GameObject slotPanel;
     [SerializeField] private Button leftKeyButton;
     [SerializeField] private Button rightKeyButton;
     [SerializeField] private Button downKeyButton;
@@ -184,10 +185,21 @@ public class UIManager : MonoBehaviour
 
     public void OnStartButtonPressed()
     {
+        mainMenuPanel.SetActive(false);
+        slotPanel.SetActive(true);
+    }
+
+    public void OnStartGame(bool loadData)
+    {
         settingsPanel.SetActive(false);
         mainMenuPanel.SetActive(false);
+        slotPanel.SetActive(false);
         backgroundPanel.SetActive(true);
-        SceneLoader.instance.LoadNextScene();
+        if(loadData)
+        {
+            SceneLoader.instance.LoadSavedScene();
+        }
+        else SceneLoader.instance.LoadNextScene();
     }
 
     public void OnContinueButtonPressed()
@@ -195,7 +207,6 @@ public class UIManager : MonoBehaviour
         settingsPanel.SetActive(false);
         mainMenuPanel.SetActive(false);
         backgroundPanel.SetActive(true);
-        SceneLoader.instance.LoadSavedScene();
     }
 
     public void OnBackButtonPressed()
@@ -203,6 +214,12 @@ public class UIManager : MonoBehaviour
         settingsPanel.SetActive(false);
         backgroundPanel.SetActive(true);
         MainManager.instance.ResumeGame();
+    }
+
+    public void OnBackButtonMainMenu()
+    {
+        slotPanel.SetActive(false);
+        mainMenuPanel.SetActive(true);
     }
 
     public void OnSettingsButtonPressed()

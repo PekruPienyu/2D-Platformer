@@ -125,7 +125,7 @@ public class Player : MonoBehaviour, IDamageable
     {
         goalReached = false;
         playerController.castleReached = false;
-        if (SceneLoader.instance.GetCurrentSceneIndex() > 1)
+        if (SceneLoader.instance.GetCurrentSceneIndex() > 0 && SceneLoader.instance.GetCurrentSceneIndex() < 5)
         {
             playerController.endPole = FindObjectOfType<EndPole>().gameObject;
             playerController.SetIsActive(true);

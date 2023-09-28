@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: PlayerData
   m_EditorClassIdentifier: 
   spawnPos: {x: 0, y: 0, z: 0}
-  score: 49700
-  coin: 23
-  live: 1
-  worldIndex: 3
-  powerLevel: 3
+  score: 0
+  coin: 0
+  live: 3
+  worldIndex: 1
+  powerLevel: 1

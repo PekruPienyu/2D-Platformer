@@ -47,6 +47,8 @@ public class MainManager : MonoBehaviour
         TimeLimitCountdown();
     }
 
+
+
     public void ConfigureNewSceneLoad()
     {
         ResetTimer();
@@ -92,9 +94,16 @@ public class MainManager : MonoBehaviour
         data.coin = coinCount;
         data.live = liveCount;
         data.powerLevel = Player.instance.GetCurrentPower();
+        data.worldIndex = SceneLoader.instance.GetCurrentSceneIndex();
+        SlotManager.instance.SavePlayerData(data);
     }
     public void LoadPlayerData_NewScene()
     {
+        PlayerData_SO _data = SlotManager.instance.GetPlayerData();
+        if(_data != null)
+        {
+            data = _data;
+        }
         score = data.score;
         coinCount = data.coin;
         liveCount = data.live;
@@ -108,6 +117,7 @@ public class MainManager : MonoBehaviour
         coinCount = 0;
         liveCount = 3;
         Player.instance.SetPowerLevel(1);
+        data.ResetData();
         SpawnPointManager.instance.ResetPlayerSavePoint();
     }
 
@@ -119,6 +129,11 @@ public class MainManager : MonoBehaviour
     public PlayerData_SO GetPlayerData()
     {
         return data;
+    }
+
+    public void SaveWorldIndex(int worldIndex)
+    {
+        data.worldIndex = worldIndex;
     }
 
     public void StartConvertTime()
