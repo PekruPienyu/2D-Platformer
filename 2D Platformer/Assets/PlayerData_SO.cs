@@ -6,9 +6,18 @@ using UnityEngine;
 public class PlayerData_SO : ScriptableObject
 {
     public Vector3 spawnPos;
-    public int score;
-    public int coin;
-    public int live;
-    public int worldIndex;
-    public int powerLevel;
+    public int score = 0;
+    public int coin = 0;
+    public int live = 3;
+    public int worldIndex = 1;
+    public int powerLevel = 1;
+
+    public void ResetData()
+    {
+        score = 0;
+        coin = 0;
+        live = 3;
+        worldIndex = 1;
+        powerLevel = 1;
+    }
 }
